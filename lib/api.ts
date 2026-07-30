@@ -9,7 +9,7 @@
  *   const students = await studentsApi.getAll({ standard: "10" })
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "http://15.207.105.160:5001/api";
 // const BASE = RAW_BASE.replace(/\/+$/, "");
 
 /* ── token helpers ──────────────────────────────────────── */
