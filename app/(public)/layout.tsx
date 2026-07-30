@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'InstituteMS - Institute Management System',
+  title: 'Arise Academy - Educational Institute',
   description: 'Manage students, admissions, fees, staff, and reports in one powerful platform.',
   generator: 'v0.app',
   icons: {
