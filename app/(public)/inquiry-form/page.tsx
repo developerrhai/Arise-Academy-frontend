@@ -14,9 +14,9 @@ const BOARDS = [
 ]
 
 const BRANCHES = [
-  "Thergaon",
-  "Wakad",
-  "Chinchwad",
+  "Akurdi",
+  "Balaji Nagar",
+  "Ravet",
 ]
 
 const STANDARDS = [

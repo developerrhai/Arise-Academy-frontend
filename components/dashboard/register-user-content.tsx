@@ -220,8 +220,6 @@ export function RegisterUserContent() {
                 <SelectTrigger><SelectValue placeholder="Select Location" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Balaji Nagar">Balaji Nagar</SelectItem><SelectItem value="Ravet">Ravet</SelectItem>
-                  <SelectItem value="Wakad">Wakad</SelectItem>
-                  <SelectItem value="Thergaon">Thergaon</SelectItem>
                 </SelectContent>
               </Select>
             </div>

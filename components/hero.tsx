@@ -12,6 +12,10 @@ export function Hero({ onGetStarted, onLogin }: HeroProps) {
     <section className="text-center py-24 md:py-32 px-6">
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-balance">
         <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Arise Academy
+        </span>
+        <br />
+        <span className="text-foreground text-3xl md:text-4xl lg:text-5xl">
           Institute Management System
         </span>
       </h1>

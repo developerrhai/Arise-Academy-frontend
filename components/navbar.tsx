@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -14,8 +15,17 @@ export function Navbar({ onLoginClick, onSignupClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-card/80 backdrop-blur-md border-b border-border">
-      <h2 className="text-2xl font-bold text-primary">InstituteMS</h2>
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur-md border-b border-border">
+      <Link href="/" className="flex items-center gap-2">
+        <Image
+          src="/arise-logo.png"
+          alt="Arise Academy Logo"
+          width={44}
+          height={44}
+          className="object-contain"
+        />
+        <span className="text-xl font-bold text-primary">Arise Academy</span>
+      </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
@@ -36,6 +46,18 @@ export function Navbar({ onLoginClick, onSignupClick }: NavbarProps) {
           className="text-foreground/80 hover:text-primary transition-colors"
         >
           Pricing
+        </Link>
+        <Link
+          href="/inquiry-form"
+          className="text-foreground/80 hover:text-primary transition-colors"
+        >
+          Inquiry Form
+        </Link>
+        <Link
+          href="/admission-form"
+          className="text-foreground/80 hover:text-primary transition-colors"
+        >
+          Admission Form
         </Link>
         <Button variant="ghost" onClick={onLoginClick}>
           Login
@@ -76,6 +98,20 @@ export function Navbar({ onLoginClick, onSignupClick }: NavbarProps) {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
+            </Link>
+            <Link
+              href="/inquiry-form"
+              className="text-foreground/80 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Inquiry Form
+            </Link>
+            <Link
+              href="/admission-form"
+              className="text-foreground/80 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Admission Form
             </Link>
             <Button
               variant="ghost"

@@ -831,7 +831,7 @@ function DropdownManageForm({
           <label className="text-xs font-semibold uppercase text-muted-foreground">Name</label>
           <Input
             placeholder={
-              addType === "branch" ? "e.g. Chinchwad" :
+              addType === "branch" ? "e.g. Akurdi" :
               addType === "batch" ? "e.g. Morning Batch" :
               addType === "board" ? "e.g. CBSE" :
               addType === "standard" ? "e.g. 10th Standard" :

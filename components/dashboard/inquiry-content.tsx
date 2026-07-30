@@ -114,8 +114,6 @@ export function InquiryContent() {
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
                 <SelectItem value="AKURDI">Akurdi</SelectItem><SelectItem value="BALAJI NAGAR">Balaji Nagar</SelectItem><SelectItem value="RAVET">Ravet</SelectItem>
-                <SelectItem value="THERGAON">Thergaon</SelectItem>
-                <SelectItem value="WAKAD">Wakad</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStandard} onValueChange={setFilterStandard}>

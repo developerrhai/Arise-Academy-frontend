@@ -415,8 +415,6 @@ export function StudentsContent() {
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
                 <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Balaji Nagar">Balaji Nagar</SelectItem><SelectItem value="Ravet">Ravet</SelectItem>
-                <SelectItem value="Wakad">Wakad</SelectItem>
-                <SelectItem value="Thergaon">Thergaon</SelectItem>
               </SelectContent>
             </Select>
           </div>
