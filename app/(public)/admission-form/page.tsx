@@ -2,6 +2,7 @@
 
 import { Header } from "@/components/ui/header"
 import { useState } from "react"
+import { publicApi } from "@/lib/api"
 
 const BOARDS = ["CBSE", "ICSE", "State Board", "IB", "IGCSE", "Other", "Cambridge Board"]
 
@@ -110,10 +111,7 @@ export default function AdmissionFormPage() {
     setError("")
     setSubmitting(true)
     try {
-      const res = await fetch("/api/admission", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await publicApi.submitAdmission({
           name:         form.studentName,
           phone:        form.studentPhone,
           father_name:  form.fatherName,
@@ -124,9 +122,8 @@ export default function AdmissionFormPage() {
           location:     form.branch,
           course:       isSenior ? form.course : "",
           subjects:     form.subjects,
-        }),
       })
-      const data = await res.json()
+      
       if (data.success) {
         setCredentials(data.credentials || null)
         setSubmitted(true)

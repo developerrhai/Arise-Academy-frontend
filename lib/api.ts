@@ -9,7 +9,7 @@
  *   const students = await studentsApi.getAll({ standard: "10" })
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
 // const BASE = RAW_BASE.replace(/\/+$/, "");
 
 /* ── token helpers ──────────────────────────────────────── */
@@ -137,6 +137,15 @@ export const teacherUpdatesApi = {
   update: (id: string | number, data: Record<string, unknown>) =>
     put(`/teacher-updates/${id}`, data),
   remove: (id: string | number) => del(`/teacher-updates/${id}`),
+};
+
+/* ══════════════════════════════════════════════════════════
+   PUBLIC FORMS
+══════════════════════════════════════════════════════════ */
+export const publicApi = {
+  submitAdmission: (data: Record<string, unknown>) => post("/admissions/public", data),
+  submitInquiry: (data: Record<string, unknown>) => post("/inquiries/public", data),
+  submitTeacherUpdate: (data: Record<string, unknown>) => post("/teacher-updates/public", data),
 };
 
 /* ══════════════════════════════════════════════════════════

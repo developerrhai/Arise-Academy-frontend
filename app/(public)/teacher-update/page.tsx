@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { publicApi } from "@/lib/api"
 
 const TEACHERS = [
   "Dr. Anil Mehta",
@@ -84,12 +85,8 @@ export default function TeacherUpdatePage() {
     setError("")
     setSubmitting(true)
     try {
-      const res  = await fetch("/api/teacher-update", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(form),
-      })
-      const data = await res.json()
+      const data = await publicApi.submitTeacherUpdate(form)
+      
       if (data.success) setSubmitted(true)
       else setError(data.message || "Submission failed. Please try again.")
     } catch {

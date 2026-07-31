@@ -7,7 +7,7 @@ export function getSocket(): Socket {
   if (!socket) {
     // Determine the socket URL. Since we attached it to the main backend server, 
     // it's the same origin as the API URL but without the /api path.
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
     const socketUrl = apiUrl.replace(/\/api\/?$/, "");
 
     socket = io(socketUrl, {
