@@ -100,7 +100,7 @@ export function AppointmentsContent() {
               <SelectTrigger><SelectValue placeholder="All Locations" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Balaji Nagar">Balaji Nagar</SelectItem><SelectItem value="Ravet">Ravet</SelectItem>
+                <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Bijaliinagar">Bijaliinagar</SelectItem><SelectItem value="Walhekarwadi">Walhekarwadi</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterDate} onValueChange={setFilterDate}>
@@ -174,7 +174,7 @@ export function AppointmentsContent() {
             <div className="space-y-2"><Label>Location</Label>
               <Select value={form.location} onValueChange={v=>f("location",v)}>
                 <SelectTrigger><SelectValue placeholder="Location" /></SelectTrigger>
-                <SelectContent><SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Balaji Nagar">Balaji Nagar</SelectItem><SelectItem value="Ravet">Ravet</SelectItem></SelectContent>
+                <SelectContent><SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Bijaliinagar">Bijaliinagar</SelectItem><SelectItem value="Walhekarwadi">Walhekarwadi</SelectItem></SelectContent>
               </Select>
             </div>
             <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e=>f("whatsapp",e.target.value)} placeholder="+91XXXXXXXXXX" /></div>

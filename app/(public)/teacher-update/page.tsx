@@ -23,7 +23,7 @@ const SUBJECTS = [
   "Computer Science", "Accountancy", "Business Studies",
 ]
 
-const BRANCHES = ["Akurdi", "Balaji Nagar", "Ravet"]
+const BRANCHES = ["Akurdi", "Bijaliinagar", "Walhekarwadi"]
 
 interface FormData {
   teacher_name: string

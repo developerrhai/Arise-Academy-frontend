@@ -12,7 +12,7 @@ const STANDARDS = [
   "10th Standard", "11th Standard", "12th Standard"
 ]
 
-const BRANCHES = ["Akurdi", "Balaji Nagar", "Ravet"]
+const BRANCHES = ["Akurdi", "Bijaliinagar", "Walhekarwadi"]
 
 const COURSES = ["IIT-JEE", "NEET", "MHT-CET", "Graduation CET"]
 

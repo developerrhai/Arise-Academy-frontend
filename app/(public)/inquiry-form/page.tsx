@@ -15,8 +15,8 @@ const BOARDS = [
 
 const BRANCHES = [
   "Akurdi",
-  "Balaji Nagar",
-  "Ravet",
+  "Bijaliinagar",
+  "Walhekarwadi",
 ]
 
 const STANDARDS = [

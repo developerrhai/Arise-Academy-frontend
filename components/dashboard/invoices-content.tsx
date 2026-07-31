@@ -483,7 +483,7 @@ const handlePrint = async (inv: Invoice) => {
             <h3>Bill To</h3>
             <p style="font-size:11px; color:#000; font-weight: 500;">Address : 6th floor, Aishwarya Deer stone, Akurdi - 411044</p>
             <p style="font-size:11px; color:#000; font-weight: 500;">Institute Contact : 9923349044</p>
-            <p style="font-size:11px; color:#000;">Branches : Akurdi | Balaji Nagar | Ravet</p>
+            <p style="font-size:11px; color:#000;">Branches : Akurdi | Bijaliinagar | Walhekarwadi</p>
             <p><b>${inv.student_name}</b></p>
             <p>Contact No. &nbsp;: ${studentPhone || "-"}</p>
             <p>Student ID &nbsp;&nbsp;: ${inv.student_id || "-"}</p>

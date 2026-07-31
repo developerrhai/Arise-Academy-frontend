@@ -219,7 +219,7 @@ export function RegisterUserContent() {
               <Select value={formData.location} onValueChange={v => set("location", v)}>
                 <SelectTrigger><SelectValue placeholder="Select Location" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Balaji Nagar">Balaji Nagar</SelectItem><SelectItem value="Ravet">Ravet</SelectItem>
+                  <SelectItem value="Akurdi">Akurdi</SelectItem><SelectItem value="Bijaliinagar">Bijaliinagar</SelectItem><SelectItem value="Walhekarwadi">Walhekarwadi</SelectItem>
                 </SelectContent>
               </Select>
             </div>

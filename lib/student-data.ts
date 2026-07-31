@@ -3,7 +3,7 @@ export const studentData = {
   phone: "9854785412",
   class: "9",
   board: "ICSE",
-  location: "Balaji Nagar",
+  location: "Bijaliinagar",
   avatar: "/student-avatar.png",
   stats: {
     overallPercentage: 88.4,

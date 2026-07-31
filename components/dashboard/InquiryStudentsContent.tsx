@@ -794,7 +794,7 @@ export function InquiryStudentsContent() {
                   <FormField label="Branch">
                     <select name="branch" value={formData.branch} onChange={handleFormChange} className={inputCls}>
                       <option value="">Select Branch</option>
-                      {["Akurdi", "Balaji Nagar", "Ravet"].map(b => (
+                      {["Akurdi", "Bijaliinagar", "Walhekarwadi"].map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>

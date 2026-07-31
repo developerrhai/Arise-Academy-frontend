@@ -19,7 +19,7 @@ const BATCHES = [
   "6th Standard CBSE", "7th Standard CBSE", "8th Standard CBSE", "9th Standard CBSE", "10th Standard CBSE",
   "11th Standard CBSE", "12th Standard CBSE", "10th Standard State", "12th Standard State"
 ];
-const BRANCHES = ["Akurdi", "Balaji Nagar", "Ravet"];
+const BRANCHES = ["Akurdi", "Bijaliinagar", "Walhekarwadi"];
 const BOARDS = ["State Board", "CBSE", "ICSE", "IB"];
 const STANDARDS = [
   "1st Standard", "2nd Standard", "3rd Standard", "4th Standard", "5th Standard",
