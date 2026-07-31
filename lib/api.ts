@@ -143,9 +143,18 @@ export const teacherUpdatesApi = {
    PUBLIC FORMS
 ══════════════════════════════════════════════════════════ */
 export const publicApi = {
-  submitAdmission: (data: Record<string, unknown>) => post("/admissions/public", data),
-  submitInquiry: (data: Record<string, unknown>) => post("/inquiries/public", data),
-  submitTeacherUpdate: (data: Record<string, unknown>) => post("/teacher-updates/public", data),
+  submitAdmission: async (data: Record<string, unknown>) => {
+    const res = await fetch("/api/admission", { method: "POST", body: JSON.stringify(data) });
+    return res.json();
+  },
+  submitInquiry: async (data: Record<string, unknown>) => {
+    const res = await fetch("/api/inquiry", { method: "POST", body: JSON.stringify(data) });
+    return res.json();
+  },
+  submitTeacherUpdate: async (data: Record<string, unknown>) => {
+    const res = await fetch("/api/teacher-update", { method: "POST", body: JSON.stringify(data) });
+    return res.json();
+  },
 };
 
 /* ══════════════════════════════════════════════════════════
