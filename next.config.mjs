@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_API_URL: 'https://institute-api.rhaitech.online/arise/api',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
