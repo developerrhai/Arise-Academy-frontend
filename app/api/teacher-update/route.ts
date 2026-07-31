@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const BACKEND = process.env.BACKEND_URL 
-  ? `${process.env.BACKEND_URL.replace(/\/$/, "")}/api` 
-  : (process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api");
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'https://institute-api.rhaitech.online/api';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,3 +32,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
