@@ -19,6 +19,7 @@ export function ManageGroupMembers({ groupId }: { groupId: number }) {
   const [open, setOpen] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [existingMembers, setExistingMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<{id: number, role: string}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,18 +33,26 @@ export function ManageGroupMembers({ groupId }: { groupId: number }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const [stdRes, tchRes] = await Promise.all([
+      const [stdRes, tchRes, grpRes] = await Promise.all([
         studentsApi.getAll(), // You can add params if needed
-        teachersApi.getAll()
+        teachersApi.getAll(),
+        chatGroupsApi.getOne(groupId)
       ]);
       if (stdRes.success) setStudents(stdRes.data);
       if (tchRes.success) setTeachers(tchRes.data);
+      if (grpRes.success && grpRes.data.members) {
+        setExistingMembers(grpRes.data.members);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
+  };
+
+  const isExistingMember = (id: number, role: string) => {
+    return existingMembers.some(m => m.user_id === id && m.user_role === role);
   };
 
   const toggleMember = (id: number, role: string) => {
@@ -68,6 +77,25 @@ export function ManageGroupMembers({ groupId }: { groupId: number }) {
         setSelectedMembers([]);
       } else {
         toast.error(res.message || "Failed to add members");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveMember = async (id: number, role: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSubmitting(true);
+    try {
+      const res = await chatGroupsApi.removeMember(groupId, id);
+      if (res.success) {
+        toast.success("Member removed");
+        setExistingMembers(prev => prev.filter(m => !(m.user_id === id && m.user_role === role)));
+      } else {
+        toast.error(res.message || "Failed to remove member");
       }
     } catch (err) {
       console.error(err);
@@ -103,18 +131,28 @@ export function ManageGroupMembers({ groupId }: { groupId: number }) {
                   <h4 className="text-sm font-semibold mb-2 text-muted-foreground">Teachers</h4>
                   <div className="space-y-1">
                     {teachers.map(t => {
+                      const isExisting = isExistingMember(t.id, 'TEACHER');
                       const isSelected = selectedMembers.some(m => m.id === t.id && m.role === 'TEACHER');
                       return (
                         <div 
                           key={`tch-${t.id}`}
-                          onClick={() => toggleMember(t.id, 'TEACHER')}
+                          onClick={() => !isExisting && toggleMember(t.id, 'TEACHER')}
                           className={cn(
                             "flex items-center justify-between p-2 rounded cursor-pointer transition-colors text-sm",
-                            isSelected ? "bg-primary/20" : "hover:bg-accent"
+                            isExisting ? "bg-accent opacity-70" : isSelected ? "bg-primary/20" : "hover:bg-accent"
                           )}
                         >
                           <span>{t.name}</span>
-                          <span className="text-xs text-muted-foreground">Teacher</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-xs text-muted-foreground">
+                               {isExisting ? "Already in group" : "Teacher"}
+                             </span>
+                             {isExisting && (
+                               <Button variant="ghost" size="sm" className="h-6 px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => handleRemoveMember(t.id, 'TEACHER', e)}>
+                                 Remove
+                               </Button>
+                             )}
+                          </div>
                         </div>
                       )
                     })}
@@ -126,18 +164,28 @@ export function ManageGroupMembers({ groupId }: { groupId: number }) {
                   <h4 className="text-sm font-semibold mb-2 text-muted-foreground mt-4">Students</h4>
                   <div className="space-y-1">
                     {students.map(s => {
+                      const isExisting = isExistingMember(s.id, 'STUDENT');
                       const isSelected = selectedMembers.some(m => m.id === s.id && m.role === 'STUDENT');
                       return (
                         <div 
                           key={`std-${s.id}`}
-                          onClick={() => toggleMember(s.id, 'STUDENT')}
+                          onClick={() => !isExisting && toggleMember(s.id, 'STUDENT')}
                           className={cn(
                             "flex items-center justify-between p-2 rounded cursor-pointer transition-colors text-sm",
-                            isSelected ? "bg-primary/20" : "hover:bg-accent"
+                            isExisting ? "bg-accent opacity-70" : isSelected ? "bg-primary/20" : "hover:bg-accent"
                           )}
                         >
                           <span>{s.name}</span>
-                          <span className="text-xs text-muted-foreground">Student</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-xs text-muted-foreground">
+                               {isExisting ? "Already in group" : "Student"}
+                             </span>
+                             {isExisting && (
+                               <Button variant="ghost" size="sm" className="h-6 px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => handleRemoveMember(s.id, 'STUDENT', e)}>
+                                 Remove
+                               </Button>
+                             )}
+                          </div>
                         </div>
                       )
                     })}

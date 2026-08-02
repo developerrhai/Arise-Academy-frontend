@@ -21,7 +21,8 @@ export function ChatRoom() {
         const res = await chatMessagesApi.getMessages(activeGroupId);
         if (res.success) {
           // API returns newest first due to DESC, reverse it for chronological display
-          setMessages(activeGroupId, res.data.reverse());
+          const messagesData = Array.isArray(res.data) ? res.data : [];
+          setMessages(activeGroupId, messagesData.reverse());
         }
       } catch (err) {
         console.error("Failed to load messages", err);
@@ -39,7 +40,7 @@ export function ChatRoom() {
 
   if (!activeGroupId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-accent/10">
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center text-muted-foreground bg-accent/10">
         <MessageSquare className="h-12 w-12 opacity-20 mb-4" />
         <p>Select a group to start chatting</p>
       </div>

@@ -2,7 +2,7 @@
 
 import {
   Home, User, UserPlus, GraduationCap, Users,
-  Receipt, ClipboardList, Calendar, Wallet, LogOut, Menu, X, Award, MessageSquare, Bell
+  Receipt, ClipboardList, Calendar, Wallet, LogOut, Menu, X, Award, MessageSquare, Bell, BookOpen
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -28,6 +28,7 @@ export type SectionType =
   | "attendance"
   | "chatGroups"
   | "pushNotifications"
+  | "curriculum"
 
 interface SidebarProps {
   activeSection: SectionType
@@ -49,6 +50,7 @@ const menuItems: { id: SectionType; label: string; icon: React.ReactNode }[] = [
   { id: "appointments",      label: "Appointments",       icon: <Calendar className="h-5 w-5" /> },
   { id: "finance",           label: "Finance",            icon: <Wallet className="h-5 w-5" /> },
   { id: "chatGroups",        label: "Group Chat",         icon: <MessageSquare className="h-5 w-5" /> },
+  { id: "curriculum",        label: "Curriculum/Batches", icon: <BookOpen className="h-5 w-5" /> },
 ]
 
 export function Sidebar({

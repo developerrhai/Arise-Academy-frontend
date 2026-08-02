@@ -85,7 +85,7 @@ import { PerformanceFilters, type PerformanceFiltersValue } from "./performance-
   // ): Promise<{ success: boolean; message: string }> {
   //   try {
   //     const res = await fetch(
-  //       `${process.env.NEXT_PUBLIC_API_URL}/whatsapp/send-report`,
+  //       `${"https://institute-api.rhaitech.online/arise/api"}/whatsapp/send-report`,
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -141,7 +141,7 @@ import { PerformanceFilters, type PerformanceFiltersValue } from "./performance-
       console.log("📤 Sending WhatsApp to:", cleanedPhone);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/whatsapp/send-report`,
+        `${"https://institute-api.rhaitech.online/arise/api"}/whatsapp/send-report`,
         {
           method: "POST",
           headers: {

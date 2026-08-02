@@ -95,7 +95,7 @@ export function StudentShell({
           onClick={() => setMobileMenuOpen(false)}
         >
           <div className="absolute inset-y-0 left-0 w-64" onClick={(e) => e.stopPropagation()}>
-            <StudentSidebar />
+            <StudentSidebar className="flex md:hidden" />
           </div>
         </div>
       )}

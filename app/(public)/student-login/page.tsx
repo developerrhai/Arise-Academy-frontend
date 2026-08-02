@@ -32,7 +32,7 @@ export default function StudentLoginPage() {
     try {
       // Use NEXT_PUBLIC_API_URL — consistent with the rest of the app
       const apiBase =
-        process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
+        "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
 
       const res = await fetch(`${apiBase}/auth/student/login`, {
         method: "POST",

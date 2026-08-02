@@ -3,8 +3,6 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Header } from "@/components/ui/header"
-import { publicApi } from "@/lib/api"
-
 const STEPS = ["Basic Details", "Academic", "Family & Contact", "Other Info"]
 
 const BOARDS = [
@@ -144,7 +142,12 @@ export default function InquiryFormPage() {
   setError("")
   setSubmitting(true)
   try {
-    const data = await publicApi.submitInquiry(form)
+    const res = await fetch("/api/inquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    })
+    const data = await res.json()
     
     if (data.success) {
       setSubmitted(true)

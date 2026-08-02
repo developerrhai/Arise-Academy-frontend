@@ -80,7 +80,7 @@ export default function StudentMarksPage() {
   const fetchMarks = useCallback(async () => {
     setLoading(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
       const res = await fetch(`${apiBase}/dashboard/student`, {
         headers: { Authorization: `Bearer ${token}` },
       });

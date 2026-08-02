@@ -9,7 +9,7 @@
  *   const students = await studentsApi.getAll({ standard: "10" })
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
+const BASE = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
 // const BASE = RAW_BASE.replace(/\/+$/, "");
 
 /* ── token helpers ──────────────────────────────────────── */
@@ -139,23 +139,6 @@ export const teacherUpdatesApi = {
   remove: (id: string | number) => del(`/teacher-updates/${id}`),
 };
 
-/* ══════════════════════════════════════════════════════════
-   PUBLIC FORMS
-══════════════════════════════════════════════════════════ */
-export const publicApi = {
-  submitAdmission: async (data: Record<string, unknown>) => {
-    const res = await fetch("/api/admission", { method: "POST", body: JSON.stringify(data) });
-    return res.json();
-  },
-  submitInquiry: async (data: Record<string, unknown>) => {
-    const res = await fetch("/api/inquiry", { method: "POST", body: JSON.stringify(data) });
-    return res.json();
-  },
-  submitTeacherUpdate: async (data: Record<string, unknown>) => {
-    const res = await fetch("/api/teacher-update", { method: "POST", body: JSON.stringify(data) });
-    return res.json();
-  },
-};
 
 /* ══════════════════════════════════════════════════════════
    INQUIRIES

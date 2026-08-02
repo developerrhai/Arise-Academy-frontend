@@ -51,7 +51,7 @@ export default function ChangePasswordPage() {
 
     try {
       // Direct fetch to backend since it requires token
-      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+      const BACKEND_URL = "https://institute-api.rhaitech.online/arise/api"
       const res = await fetch(`${BACKEND_URL}/auth/student/change-password`, {
         method: "POST",
         headers: {

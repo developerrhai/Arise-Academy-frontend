@@ -17,7 +17,15 @@ export function ChatInput({ groupId }: { groupId: number }) {
     setIsSending(true);
     const socket = getSocket();
     
+    const timeoutId = setTimeout(() => {
+      if (isSending) {
+        setIsSending(false);
+        toast.error("Message send timeout. Please try again.");
+      }
+    }, 5000);
+
     socket.emit("send_message", { groupId, messageText: text }, (response: any) => {
+      clearTimeout(timeoutId);
       setIsSending(false);
       if (response && response.success) {
         setText("");

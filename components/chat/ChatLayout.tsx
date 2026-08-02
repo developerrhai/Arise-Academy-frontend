@@ -15,7 +15,15 @@ export function ChatLayout() {
     // 1. Fetch groups from API
     const loadGroups = async () => {
       try {
-        const res = await chatGroupsApi.getMyGroups();
+        let isAdmin = false;
+        try {
+          const info = localStorage.getItem("userInfo");
+          if (info) {
+            isAdmin = JSON.parse(info).role === "admin";
+          }
+        } catch (e) {}
+
+        const res = isAdmin ? await chatGroupsApi.getAll() : await chatGroupsApi.getMyGroups();
         if (res.success) {
           setGroups(res.data);
           if (res.data.length > 0 && !activeGroupId) {

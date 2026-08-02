@@ -823,7 +823,7 @@ export default function StudentManagementContent() {
         if (phoneToUse) {
           try {
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/whatsapp/send-absent-report`,
+              `${"https://institute-api.rhaitech.online/arise/api"}/whatsapp/send-absent-report`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

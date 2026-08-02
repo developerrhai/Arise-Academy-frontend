@@ -19,6 +19,7 @@ import { AttendanceContent }              from "@/components/dashboard/attendanc
 import { AdminHomeworkContent }           from "@/components/dashboard/admin-homework"
 import { ChatGroupsAdmin }                from "@/components/dashboard/chat-groups-admin"
 import { PushNotificationsContent }       from "@/components/dashboard/push-notifications-content"
+import { NotesWizard }                    from "@/components/teacher/NotesWizard"
 import { getToken }                       from "@/lib/api"
 import { registerPushNotificationToken }  from "@/lib/push-notification"
 import { cn } from "@/lib/utils"
@@ -79,6 +80,7 @@ export default function DashboardPage() {
       case "finance":           return <FinanceContent />
       case "attendance":        return <AttendanceContent />
       case "chatGroups":        return <ChatGroupsAdmin />
+      case "curriculum":        return <div className="p-4 bg-card rounded-xl border border-border/70 shadow-sm"><NotesWizard /></div>
       default:                  return <DashboardContent />
     }
   }

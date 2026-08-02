@@ -200,7 +200,7 @@ export default function StudentDashboard() {
     setError(false);
     try {
       // Use the centralized API base URL from lib/api.ts (NEXT_PUBLIC_API_URL)
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
 
       const res = await fetch(`${apiBase}/dashboard/student`, {
         headers: { Authorization: `Bearer ${token}` },

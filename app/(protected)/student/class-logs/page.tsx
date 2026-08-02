@@ -62,7 +62,7 @@ export default function StudentClassLogsPage() {
     }
     
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
       const res = await fetch(`${apiBase}/dashboard/student?page=${pageNum}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

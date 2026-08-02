@@ -7,15 +7,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
 export function ChatMessageList({ groupId }: { groupId: number }) {
-  const messages = useChatStore((state) => state.messages[groupId] || []);
+  const messagesFromStore = useChatStore((state) => state.messages[groupId]);
+  const messages = messagesFromStore || [];
   const scrollRef = useRef<HTMLDivElement>(null);
   
   // Get current user id from localStorage token/info for self-styling
   let currentUserId = -1;
+  let currentUserRole = "";
   try {
      const info = localStorage.getItem("userInfo");
      if (info) {
-       currentUserId = JSON.parse(info).id;
+       const parsed = JSON.parse(info);
+       currentUserId = parsed.id;
+       currentUserRole = parsed.role;
      }
   } catch (e) {}
 
@@ -34,7 +38,8 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMe = msg.sender_id === currentUserId;
+            const isMe = msg.sender_id === currentUserId && 
+                         msg.sender_role?.toLowerCase() === currentUserRole?.toLowerCase();
             
             return (
               <div
@@ -61,7 +66,7 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
                   {msg.message_text}
                 </div>
                 <span className="text-[10px] text-muted-foreground mt-1 mx-1 opacity-70">
-                  {format(new Date(msg.created_at), "h:mm a")}
+                  {msg.created_at ? (() => { try { return format(new Date(msg.created_at), "h:mm a") } catch(e) { return "" } })() : ""}
                 </span>
               </div>
             );
