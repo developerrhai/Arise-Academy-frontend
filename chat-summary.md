@@ -150,3 +150,10 @@ A complete, end-to-end push notification system was integrated into both the Exp
   - **Push Broadcast Audit Logs Matrix Table**: Real-time delivery stats (`✓ Success` / `✗ Fail`), target role badges, status badges (`Sent` / `Failed`), sender name, and timestamp.
 - **Auto Token Registration**: Automatically registers FCM device tokens when Students log into `StudentShell` or Admins access `/dashboard`.
 
+---
+
+## 9. UI Refactoring & Dropdown Fixes
+Addressed several frontend usability bugs affecting the layout and data-binding:
+- **Sidebar Dropdowns:** Fixed an issue where the "Teachers" and "Students" sidebar menus would not open if the sidebar was collapsed. Clicking these icons now gracefully expands the sidebar.
+- **Notes Wizard & Dropdowns Resiliency:** Updated property mapping (`branch_id || id`) inside `<NotesWizard>` and `<NotesDropdownView>` to dynamically handle varying backend schemas, fixing bugs where `<select>` options or buttons were rendered blank.
+- **Accessibility:** Handled Radix UI missing description warnings by injecting `.sr-only` descriptions into `DialogContent` headers.
