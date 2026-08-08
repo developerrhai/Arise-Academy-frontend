@@ -141,12 +141,12 @@ export function NotesWizard() {
   const handleSuccessAddition = () => {
     setOpen(false);
     if (step === 1) loadBranches();
-    if (step === 2 && selectedBranch) fetchBatches(selectedBranch.branch_id);
+    if (step === 2 && selectedBranch) fetchBatches(selectedBranch.branch_id || selectedBranch.id);
     if (step === 3) loadBoards();
-    if (step === 4 && selectedBoard && selectedBatch) fetchStandards(selectedBoard.board_id, selectedBatch.batch_id, selectedBranch?.branch_id);
-    if (step === 5 && selectedStandard) fetchSubjects(selectedStandard.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id);
-    if (step === 6 && selectedSubject) fetchChapters(selectedSubject.sub_id, selectedStandard?.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id);
-    if (step === 7 && selectedChapter) fetchNotes(selectedChapter.chap_id, selectedSubject.sub_id, selectedStandard?.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id);
+    if (step === 4 && selectedBoard && selectedBatch) fetchStandards(selectedBoard.board_id || selectedBoard.id, selectedBatch.batch_id || selectedBatch.id, selectedBranch?.branch_id || selectedBranch?.id);
+    if (step === 5 && selectedStandard) fetchSubjects(selectedStandard.stand_id || selectedStandard.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id);
+    if (step === 6 && selectedSubject) fetchChapters(selectedSubject.sub_id || selectedSubject.id, selectedStandard?.stand_id || selectedStandard?.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id);
+    if (step === 7 && selectedChapter) fetchNotes(selectedChapter.chap_id || selectedChapter.id, selectedSubject.sub_id || selectedSubject.id, selectedStandard?.stand_id || selectedStandard?.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id);
   };
 
   const renderEmptyState = (label: string) => (
@@ -206,8 +206,8 @@ export function NotesWizard() {
           <>
             {branches.length === 0 && renderEmptyState("branches")}
             {branches?.map((b) => (
-              <PillOption key={b.branch_id} label={b.branch_name} onClick={() => {
-                setSelectedBranch(b); fetchBatches(b.branch_id); setStep(2);
+              <PillOption key={b.branch_id || b.id} label={b.branch_name || b.name} onClick={() => {
+                setSelectedBranch(b); fetchBatches(b.branch_id || b.id); setStep(2);
               }} />
             ))}
           </>
@@ -218,7 +218,7 @@ export function NotesWizard() {
           <>
             {batches.length === 0 && renderEmptyState("batches")}
             {batches?.map((b) => (
-              <PillOption key={b.batch_id} label={`${b.batch_name} (${b.start_time} - ${b.end_time})`} onClick={() => {
+              <PillOption key={b.batch_id || b.id} label={`${b.batch_name || b.name} (${b.start_time || ''} - ${b.end_time || ''})`} onClick={() => {
                 setSelectedBatch(b); loadBoards(); setStep(3);
               }} />
             ))}
@@ -230,8 +230,8 @@ export function NotesWizard() {
           <>
             {boards.length === 0 && renderEmptyState("boards")}
             {boards?.map((b) => (
-              <PillOption key={b.board_id} label={b.name} onClick={() => {
-                setSelectedBoard(b); fetchStandards(b.board_id, selectedBatch?.batch_id, selectedBranch?.branch_id); setStep(4);
+              <PillOption key={b.board_id || b.id} label={b.name} onClick={() => {
+                setSelectedBoard(b); fetchStandards(b.board_id || b.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBranch?.branch_id || selectedBranch?.id); setStep(4);
               }} />
             ))}
           </>
@@ -242,8 +242,8 @@ export function NotesWizard() {
           <>
             {standards.length === 0 && renderEmptyState("standards")}
             {standards?.map((s) => (
-              <PillOption key={s.stand_id} label={s.name} onClick={() => {
-                setSelectedStandard(s); fetchSubjects(s.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id); setStep(5);
+              <PillOption key={s.stand_id || s.id} label={s.name} onClick={() => {
+                setSelectedStandard(s); fetchSubjects(s.stand_id || s.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id); setStep(5);
               }} />
             ))}
           </>
@@ -256,13 +256,13 @@ export function NotesWizard() {
     {subjects.length === 0 && renderEmptyState("subjects")}
     {subjects?.map((sub) => (
       <RowOption 
-        key={sub.sub_id} 
+        key={sub.sub_id || sub.id} 
         label={sub.name} 
         // Display the teacher name if it exists in the subject record
         meta={sub.teacher_name ? `Teacher: ${sub.teacher_name}` : "No teacher assigned"} 
         onClick={() => {
           setSelectedSubject(sub); 
-          fetchChapters(sub.sub_id, selectedStandard?.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id); 
+          fetchChapters(sub.sub_id || sub.id, selectedStandard?.stand_id || selectedStandard?.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id); 
           setStep(6);
         }} 
       />
@@ -277,12 +277,12 @@ export function NotesWizard() {
     {chapters.length === 0 && renderEmptyState("chapters")}
     {chapters?.map((chap) => (
       <RowOption 
-        key={chap.chap_id} 
+        key={chap.chap_id || chap.id} 
         label={chap.name || chap.chapter_name} 
         meta={chap.description} 
         onClick={() => {
           setSelectedChapter(chap); 
-          fetchNotes(chap.chap_id,selectedSubject?.sub_id, selectedStandard?.stand_id, selectedBranch?.branch_id, selectedBatch?.batch_id, selectedBoard?.board_id); 
+          fetchNotes(chap.chap_id || chap.id, selectedSubject?.sub_id || selectedSubject?.id, selectedStandard?.stand_id || selectedStandard?.id, selectedBranch?.branch_id || selectedBranch?.id, selectedBatch?.batch_id || selectedBatch?.id, selectedBoard?.board_id || selectedBoard?.id); 
           setStep(7);
         }}
       >
@@ -315,8 +315,8 @@ export function NotesWizard() {
         {step === 7 && (
           <>
             {notes.length === 0 && renderEmptyState("notes")}
-            {notes?.map((n) => (
-              <RowOption key={n.note_id} label={n.title} meta={"Click to view note"} onClick={() => {
+            {notes?.map((n: any) => (
+              <RowOption key={n.note_id || n.id} label={n.title} meta={"Click to view note"} onClick={() => {
                 window.open(n.file_url, "_blank");
               }} />
             ))}
@@ -337,16 +337,17 @@ export function NotesWizard() {
         <SheetContent side="bottom" className="rounded-t-3xl max-h-[90vh] overflow-y-auto">
           <SheetHeader className="text-left">
             <SheetTitle>{ADD_LABELS[step - 1]}</SheetTitle>
+            <div className="sr-only" aria-describedby="manage-description">Manage Options</div>
           </SheetHeader>
           <AddNoteForm
             step={step}
             parentIds={{
-              branch_id: selectedBranch?.branch_id,
-              batch_id: selectedBatch?.batch_id,
-              board_id: selectedBoard?.board_id,
-              stand_id: selectedStandard?.stand_id,
-              sub_id: selectedSubject?.sub_id,
-              chap_id: selectedChapter?.chap_id,
+              branch_id: selectedBranch?.branch_id || selectedBranch?.id,
+              batch_id: selectedBatch?.batch_id || selectedBatch?.id,
+              board_id: selectedBoard?.board_id || selectedBoard?.id,
+              stand_id: selectedStandard?.stand_id || selectedStandard?.id,
+              sub_id: selectedSubject?.sub_id || selectedSubject?.id,
+              chap_id: selectedChapter?.chap_id || selectedChapter?.id,
             }}
             onSuccess={handleSuccessAddition}
           />

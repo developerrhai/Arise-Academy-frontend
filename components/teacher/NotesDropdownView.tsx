@@ -281,7 +281,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Branch</option>
             {branches.map((b) => (
-              <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
+              <option key={b.branch_id || b.id} value={b.branch_id || b.id}>{b.branch_name || b.name}</option>
             ))}
           </select>
         </div>
@@ -297,7 +297,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Batch</option>
             {batches.map((b) => (
-              <option key={b.batch_id} value={b.batch_id}>{b.batch_name}</option>
+              <option key={b.batch_id || b.id} value={b.batch_id || b.id}>{b.batch_name || b.name}</option>
             ))}
           </select>
         </div>
@@ -313,7 +313,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Board</option>
             {boards.map((b) => (
-              <option key={b.board_id} value={b.board_id}>{b.name}</option>
+              <option key={b.board_id || b.id} value={b.board_id || b.id}>{b.name}</option>
             ))}
           </select>
         </div>
@@ -329,7 +329,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Standard</option>
             {standards.map((s) => (
-              <option key={s.stand_id} value={s.stand_id}>{s.name}</option>
+              <option key={s.stand_id || s.id} value={s.stand_id || s.id}>{s.name}</option>
             ))}
           </select>
         </div>
@@ -345,7 +345,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Subject</option>
             {subjects.map((s) => (
-              <option key={s.sub_id} value={s.sub_id}>{s.name}</option>
+              <option key={s.sub_id || s.id} value={s.sub_id || s.id}>{s.name}</option>
             ))}
           </select>
         </div>
@@ -361,7 +361,7 @@ export function NotesDropdownView() {
           >
             <option value="">Select Chapter</option>
             {chapters.map((c) => (
-              <option key={c.chap_id} value={c.chap_id}>{c.name || c.chapter_name}</option>
+              <option key={c.chap_id || c.id} value={c.chap_id || c.id}>{c.name || c.chapter_name}</option>
             ))}
           </select>
         </div>
@@ -462,6 +462,7 @@ export function NotesDropdownView() {
         <SheetContent side="bottom" className="rounded-t-3xl max-h-[95vh] overflow-y-auto">
           <SheetHeader className="text-left">
             <SheetTitle>Manage Categories & Notes</SheetTitle>
+            <div className="sr-only" aria-describedby="manage-description">Manage Options</div>
           </SheetHeader>
           
           <DropdownManageForm 
@@ -734,7 +735,7 @@ function DropdownManageForm({
           >
             <option value="">Select Branch</option>
             {dropdowns.branches.map((b) => (
-              <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
+              <option key={b.branch_id || b.id} value={b.branch_id || b.id}>{b.branch_name || b.name}</option>
             ))}
           </select>
         </div>
@@ -752,7 +753,7 @@ function DropdownManageForm({
             >
               <option value="">Select Board</option>
               {dropdowns.boards.map((b) => (
-                <option key={b.board_id} value={b.board_id}>{b.name}</option>
+                <option key={b.board_id || b.id} value={b.board_id || b.id}>{b.name}</option>
               ))}
             </select>
           </div>
@@ -766,7 +767,7 @@ function DropdownManageForm({
             >
               <option value="">Select Batch</option>
               {dropdowns.batches.map((b) => (
-                <option key={b.batch_id} value={b.batch_id}>{b.batch_name}</option>
+                <option key={b.batch_id || b.id} value={b.batch_id || b.id}>{b.batch_name || b.name}</option>
               ))}
             </select>
           </div>
@@ -784,7 +785,7 @@ function DropdownManageForm({
           >
             <option value="">Select Standard</option>
             {dropdowns.standards.map((s) => (
-              <option key={s.stand_id} value={s.stand_id}>{s.name}</option>
+              <option key={s.stand_id || s.id} value={s.stand_id || s.id}>{s.name}</option>
             ))}
           </select>
         </div>
