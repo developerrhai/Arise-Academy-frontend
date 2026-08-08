@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { GraduationCap, Search, Eye, Trash2, Phone, User, MapPin, BookOpen, Loader2, IndianRupee, Pencil, FileSpreadsheet, Upload, Key } from "lucide-react"
+import { GraduationCap, Search, Eye, Trash2, Phone, User, MapPin, BookOpen, Loader2, IndianRupee, Pencil, FileSpreadsheet, Upload, Key, UserCog } from "lucide-react"
 import { studentsApi, studentsUniversalApi } from "@/lib/api"
 import * as XLSX from "xlsx"
 
@@ -59,6 +59,12 @@ export function StudentsContent() {
   const [payAmount,    setPayAmount]    = useState("")
   const [payMode,      setPayMode]      = useState<"add" | "set">("add")
   const [paySaving,    setPaySaving]    = useState(false)
+
+  // Edit Profile modal
+  const [editStudent,   setEditStudent]   = useState<Student | null>(null)
+  const [editProfileOpen, setEditProfileOpen] = useState(false)
+  const [editForm,      setEditForm]      = useState({ standard: "", course: "", board: "" })
+  const [editSaving,    setEditSaving]    = useState(false)
 
   // Set Password modal
   const [passwordStudent, setPasswordStudent] = useState<Student | null>(null)
@@ -115,6 +121,29 @@ export function StudentsContent() {
       await studentsApi.remove(id)
       setStudents(prev => prev.filter(s => s.id !== id))
     } catch (err: any) { alert(err.message) }
+  }
+
+  // ── Edit Profile ───────────────────────────────────────
+  const openEditProfile = (s: Student) => {
+    setEditStudent(s)
+    setEditForm({ standard: s.standard || "", course: s.course || "", board: s.board || "" })
+    setEditProfileOpen(true)
+  }
+  const handleUpdateProfile = async () => {
+    if (!editStudent) return
+    setEditSaving(true)
+    try {
+      await studentsApi.update(editStudent.id, { 
+        ...editStudent, 
+        standard: editForm.standard, 
+        course: editForm.course, 
+        board: editForm.board, 
+        subjects: editStudent.subjects.join(",") 
+      })
+      setStudents(prev => prev.map(s => s.id === editStudent.id ? { ...s, standard: editForm.standard, course: editForm.course, board: editForm.board } : s))
+      setEditProfileOpen(false)
+    } catch (err: any) { alert(err.message) }
+    finally { setEditSaving(false) }
   }
 
   // ── Update Fee ─────────────────────────────────────────
@@ -517,6 +546,12 @@ export function StudentsContent() {
                               title="Edit subjects"
                               onClick={() => openSubjectModal(s)}>
                               <BookOpen className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline"
+                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:border-orange-300"
+                              title="Edit Batch / Profile"
+                              onClick={() => openEditProfile(s)}>
+                              <UserCog className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline"
                               className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:border-blue-300"
@@ -971,6 +1006,50 @@ export function StudentsContent() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit Profile Modal ────────────────────────────── */}
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5 text-orange-600" /> Edit Batch / Profile
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Board</Label>
+              <Input
+                value={editForm.board}
+                onChange={e => setEditForm(p => ({ ...p, board: e.target.value }))}
+                placeholder="e.g. State Board"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Standard</Label>
+              <Input
+                value={editForm.standard}
+                onChange={e => setEditForm(p => ({ ...p, standard: e.target.value }))}
+                placeholder="e.g. 10th Standard"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Batch / Course</Label>
+              <Input
+                value={editForm.course}
+                onChange={e => setEditForm(p => ({ ...p, course: e.target.value }))}
+                placeholder="e.g. Morning Batch"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProfileOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateProfile} disabled={editSaving} className="bg-orange-600 hover:bg-orange-700">
+              {editSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }
