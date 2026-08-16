@@ -157,3 +157,25 @@ Addressed several frontend usability bugs affecting the layout and data-binding:
 - **Sidebar Dropdowns:** Fixed an issue where the "Teachers" and "Students" sidebar menus would not open if the sidebar was collapsed. Clicking these icons now gracefully expands the sidebar.
 - **Notes Wizard & Dropdowns Resiliency:** Updated property mapping (`branch_id || id`) inside `<NotesWizard>` and `<NotesDropdownView>` to dynamically handle varying backend schemas, fixing bugs where `<select>` options or buttons were rendered blank.
 - **Accessibility:** Handled Radix UI missing description warnings by injecting `.sr-only` descriptions into `DialogContent` headers.
+
+---
+
+## 10. System Extensions, Chat Messaging, Timetables & Production Deployment (August 16, 2026)
+
+### Real-time Chat & Group Messaging
+- **Frontend Components**: Created `ChatLayout`, `ChatGroupList`, `ChatHeader`, `ChatInput`, `ChatMessageList`, `ChatRoom`, `ManageGroupMembers`, and admin group management view (`components/dashboard/chat-groups-admin.tsx`). Integrated WebSocket (`lib/socket.ts`) and REST API handlers (`lib/api.ts`).
+- **Backend API & DB**: Added `chatGroupController.js`, `chatMessageController.js`, `chatGroups.js`, `chatMessages.js`, and database schema tables (`chat_groups`, `chat_group_members`, `chat_messages`).
+
+### Timetable Management System
+- **Frontend Integration**: Implemented Timetable dashboard pages for Students (`/student/timetable/page.tsx`) and Teachers (`/teacherdashboard/timetable/page.tsx`), and admin timetable component (`components/dashboard/timetable-content.tsx`).
+- **Backend API & DB**: Added `timetableController.js`, `timetable.js` routes, and database tables for schedule slots.
+
+### Inventory Management & Recycle Bin
+- **Inventory Module**: Added inventory management view (`components/dashboard/inventory-content.tsx`) and backend endpoints (`/api/inventory`, `inventoryController.js`, `inventory.js`).
+- **Recycle Bin Module**: Added soft-delete recovery UI (`components/dashboard/recycle-bin-content.tsx`) and backend recovery handlers (`recycleBinRoutes.js`, `recycleBinController.js`).
+
+### Biometric Attendance Sync & Production Deployment
+- **SmartOffice Watcher**: Created `smartOfficeWatcher.js` background service polling attendance hardware logs every 30 seconds.
+- **GitHub Repositories**: Committed and pushed clean working trees to `developerrhai/Arise-Academy-frontend` (`main` branch) and `developerrhai/Arise-Academy-backend` (`main` branch).
+- **EC2 Deployment**: Deployed backend code to EC2 `/app/arise-backend/`, executed database migrations (`node src/db/migrate.js`), installed `axios` dependency, and verified PM2 process `arise-backend` (ID 2, Port 5003, ONLINE with 0 active errors).
+
