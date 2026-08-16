@@ -25,11 +25,12 @@ const navItems = [
   { title: "My Attendance", url: "/student/attendance", icon: Calendar },
   { title: "Fee Status", url: "/student/fees", icon: Receipt },
   { title: "Class Logs", url: "/student/class-logs", icon: BookMarked },
+  { title: "Timetable", url: "/student/timetable", icon: Calendar },
   { title: "Group Chat", url: "/student/chat", icon: MessageSquare },
   { title: "Security", url: "/student/change-password", icon: Shield },
 ];
 
-export function StudentSidebar({ className }: { className?: string }) {
+export function StudentSidebar() {
   const pathname = usePathname();
   const logout = useAuthStore((state) => state.logout);
 
@@ -41,7 +42,7 @@ export function StudentSidebar({ className }: { className?: string }) {
   };
 
   return (
-    <aside className={cn("hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border h-full", className)}>
+    <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       {/* Brand logo */}
       <div className="px-6 py-6 flex items-center gap-2">
         <div
@@ -79,7 +80,7 @@ export function StudentSidebar({ className }: { className?: string }) {
         })}
       </nav>
 
-      {/* Tip card — matches teacher portal pattern */}
+      {/* Tip card â€” matches teacher portal pattern */}
       <div className="m-3 rounded-2xl p-4 bg-sidebar-accent/60 border border-sidebar-border">
         <div className="flex items-center gap-2 text-xs text-sidebar-foreground/70">
           <GraduationCap className="h-3.5 w-3.5" />

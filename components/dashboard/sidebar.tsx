@@ -2,12 +2,13 @@
 
 import {
   Home, User, UserPlus, GraduationCap, Users,
-  Receipt, ClipboardList, Calendar, Wallet, LogOut, Menu, X, Award, MessageSquare, Bell, BookOpen
+  Receipt, ClipboardList, Calendar, Wallet, LogOut, Menu, X, Award, MessageSquare, Bell, BookOpen, Building, Package, Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { clearToken } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 export type SectionType =
   | "dashboard"
@@ -25,10 +26,14 @@ export type SectionType =
   | "inquiry"
   | "appointments"
   | "finance"
+  | "inventory"
   | "attendance"
   | "chatGroups"
   | "pushNotifications"
   | "curriculum"
+  | "timetable"
+  | "branchesBatches"
+  | "recycleBin"
 
 interface SidebarProps {
   activeSection: SectionType
@@ -42,6 +47,9 @@ const menuItems: { id: SectionType; label: string; icon: React.ReactNode }[] = [
   { id: "profile",           label: "Admin Profile",      icon: <User className="h-5 w-5" /> },
   { id: "registerUser",      label: "Register User",      icon: <UserPlus className="h-5 w-5" /> },
   { id: "pushNotifications", label: "Push Notifications", icon: <Bell className="h-5 w-5" /> },
+  { id: "branchesBatches",   label: "Branches & Batches", icon: <Building className="h-5 w-5" /> },
+  { id: "curriculum",        label: "Curriculum",         icon: <BookOpen className="h-5 w-5" /> },
+  { id: "timetable",         label: "Timetable Calendar", icon: <Calendar className="h-5 w-5" /> },
   { id: "students",          label: "Students",           icon: <GraduationCap className="h-5 w-5" /> },
   { id: "teachers",          label: "Teachers",           icon: <Users className="h-5 w-5" /> },
   { id: "attendance",        label: "Attendance",         icon: <Award className="h-5 w-5" /> },
@@ -49,8 +57,8 @@ const menuItems: { id: SectionType; label: string; icon: React.ReactNode }[] = [
   { id: "inquiry",           label: "New Inquiry",        icon: <ClipboardList className="h-5 w-5" /> },
   { id: "appointments",      label: "Appointments",       icon: <Calendar className="h-5 w-5" /> },
   { id: "finance",           label: "Finance",            icon: <Wallet className="h-5 w-5" /> },
+  { id: "inventory",         label: "Inventory",          icon: <Package className="h-5 w-5" /> },
   { id: "chatGroups",        label: "Group Chat",         icon: <MessageSquare className="h-5 w-5" /> },
-  { id: "curriculum",        label: "Curriculum/Batches", icon: <BookOpen className="h-5 w-5" /> },
 ]
 
 export function Sidebar({
@@ -63,6 +71,7 @@ export function Sidebar({
   const [mobileOpen,  setMobileOpen]  = useState(false)
   const [teacherOpen, setTeacherOpen] = useState(false)
   const [studentOpen, setStudentOpen] = useState(false)
+  const router = useRouter()
 
   const handleLogout = () => {
     clearToken()
@@ -90,15 +99,12 @@ export function Sidebar({
       <nav className="flex-1 py-4 space-y-1 overflow-y-auto">
         {menuItems.map(item => {
 
-          // 👉 Teachers Dropdown
+          // ðŸ‘‰ Teachers Dropdown
           if (item.id === "teachers") {
             return (
               <div key={item.id}>
                 <button
-                  onClick={() => {
-                    setTeacherOpen(prev => !prev)
-                    if (!expanded && !mobile) onExpandedChange(true)
-                  }}
+                  onClick={() => setTeacherOpen(prev => !prev)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-300 hover:bg-slate-700 transition-all duration-200"
                 >
                   <span className="shrink-0">{item.icon}</span>
@@ -109,7 +115,7 @@ export function Sidebar({
                     {item.label}
                   </span>
                   {(expanded || mobile) && (
-                    <span className="text-xs">{teacherOpen ? "▲" : "▼"}</span>
+                    <span className="text-xs">{teacherOpen ? "â–²" : "â–¼"}</span>
                   )}
                 </button>
 
@@ -148,17 +154,14 @@ export function Sidebar({
             )
           }
 
-          // 👉 Students Dropdown — Student Management + Inquiry Students
+          // ðŸ‘‰ Students Dropdown â€” Student Management + Inquiry Students
           if (item.id === "students") {
             const isStudentActive =
               activeSection === "studentManagement" || activeSection === "inquiryStudents" || activeSection === "studentMarks"
             return (
               <div key={item.id}>
                 <button
-                  onClick={() => {
-                    setStudentOpen(prev => !prev)
-                    if (!expanded && !mobile) onExpandedChange(true)
-                  }}
+                  onClick={() => setStudentOpen(prev => !prev)}
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-700 transition-all duration-200",
                     isStudentActive ? "text-amber-400" : "text-slate-300"
@@ -172,7 +175,7 @@ export function Sidebar({
                     {item.label}
                   </span>
                   {(expanded || mobile) && (
-                    <span className="text-xs">{studentOpen ? "▲" : "▼"}</span>
+                    <span className="text-xs">{studentOpen ? "â–²" : "â–¼"}</span>
                   )}
                 </button>
 
@@ -211,7 +214,7 @@ export function Sidebar({
             )
           }
 
-          // 👉 Normal Items (inquiry is now just a plain button — no dropdown)
+          // ðŸ‘‰ Normal Items (inquiry is now just a plain button â€” no dropdown)
           return (
             <button
               key={item.id}
@@ -233,6 +236,25 @@ export function Sidebar({
             </button>
           )
         })}
+
+        {/* Top-level explicit Recycle Bin Link */}
+        <button
+          onClick={() => { onSectionChange("recycleBin"); setMobileOpen(false) }}
+          className={cn(
+            "w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:bg-slate-700 hover:translate-x-1",
+            activeSection === "recycleBin"
+              ? "bg-slate-700 border-r-4 border-amber-400 text-amber-400"
+              : "text-slate-300"
+          )}
+        >
+          <span className="shrink-0"><Trash className="h-5 w-5" /></span>
+          <span className={cn(
+            "whitespace-nowrap transition-all duration-300 overflow-hidden",
+            expanded || mobile ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0"
+          )}>
+            Recycle Bin
+          </span>
+        </button>
       </nav>
 
       {/* Logout */}

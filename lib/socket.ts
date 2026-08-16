@@ -7,20 +7,13 @@ export function getSocket(): Socket {
   if (!socket) {
     // Determine the socket URL. Since we attached it to the main backend server, 
     // it's the same origin as the API URL but without the /api path.
-    const apiUrl = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
     const socketUrl = apiUrl.replace(/\/api\/?$/, "");
 
-    const token = getToken();
-    
-    // Extract the path if there's a subpath in the URL (e.g. /arise)
-    const urlObj = new URL(socketUrl);
-    const subPath = urlObj.pathname === '/' ? '' : urlObj.pathname;
-    
-    socket = io(urlObj.origin, {
-      path: `${subPath}/socket.io/`,
-      auth: { token: token || "" },
+    socket = io(socketUrl, {
+      auth: { token: getToken() },
       transports: ["websocket", "polling"],
-      autoConnect: Boolean(token),
+      autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
     });

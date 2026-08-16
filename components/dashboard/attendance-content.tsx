@@ -55,6 +55,8 @@ export function AttendanceContent() {
   const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [standardFilter, setStandardFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [notifying, setNotifying] = useState(false);
@@ -70,15 +72,13 @@ export function AttendanceContent() {
   const [editStatus, setEditStatus] = useState<AttendanceRecord["status"]>("Present");
   const [editPunchIn, setEditPunchIn] = useState("");
   const [editPunchOut, setEditPunchOut] = useState("");
-  const [editBioCode, setEditBioCode] = useState("");
-  const [editStudentId, setEditStudentId] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Fetch Attendance logs
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
-      const apiBase = "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
       const res = await fetch(`${apiBase}/attendance?date=${date}&role=${role}`, { headers });
       
@@ -103,7 +103,7 @@ export function AttendanceContent() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const apiBase = "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
       const res = await fetch(`${apiBase}/attendance/sync`, {
         method: "POST",
@@ -133,7 +133,7 @@ export function AttendanceContent() {
   // Mark On Leave
   const handleMarkLeave = async (record: AttendanceRecord) => {
     try {
-      const apiBase = "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
       const res = await fetch(`${apiBase}/attendance/leave`, {
         method: "POST",
@@ -164,8 +164,6 @@ export function AttendanceContent() {
     setEditStatus(record.status);
     setEditPunchIn(record.punchIn || "");
     setEditPunchOut(record.punchOut || "");
-    setEditBioCode(record.student.code || "");
-    setEditStudentId(record.student.id?.toString() || "");
     setIsEditOpen(true);
   };
 
@@ -173,7 +171,7 @@ export function AttendanceContent() {
   const handleSaveEdit = async () => {
     if (!editingRecord) return;
     try {
-      const apiBase = "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
       const res = await fetch(`${apiBase}/attendance/record`, {
         method: "PUT",
@@ -182,9 +180,7 @@ export function AttendanceContent() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          studentCode: editingRecord.student.code, // legacy reference
-          biocode: editBioCode,
-          studentId: editStudentId,
+          studentCode: editingRecord.student.code,
           date,
           status: editStatus,
           punchIn: editPunchIn || null,
@@ -208,7 +204,7 @@ export function AttendanceContent() {
   const handleNotifyWhatsApp = async () => {
     setNotifying(true);
     try {
-      const apiBase = "https://institute-api.rhaitech.online/arise/api";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
       const res = await fetch(`${apiBase}/attendance/notify-whatsapp`, {
         method: "POST",
@@ -282,13 +278,27 @@ export function AttendanceContent() {
     reader.readAsBinaryString(file);
   };
 
+  // Compute dynamic filter options
+  const uniqueStandards = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.student?.standard).filter(Boolean))).sort();
+  }, [records]);
+
+  const uniqueBranches = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.student?.course).filter(Boolean))).sort();
+  }, [records]);
+
   // Compute summary stats dynamically
   const summary = useMemo(() => {
+    const q = search.trim().toLowerCase();
     const filtered = records.filter(r => {
-      const matchSearch = r.student.name.toLowerCase().includes(search.toLowerCase()) || 
-                          r.student.code.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = !q || 
+                          (r.student?.name?.toLowerCase() || "").includes(q) || 
+                          (r.student?.code?.toLowerCase() || "").includes(q) ||
+                          (r.student?.contact?.toLowerCase() || "").includes(q);
       const matchStatus = !statusFilter || r.status === statusFilter;
-      return matchSearch && matchStatus;
+      const matchStandard = role !== "STUDENT" || !standardFilter || r.student?.standard === standardFilter;
+      const matchBranch = role !== "STUDENT" || !branchFilter || r.student?.course === branchFilter;
+      return matchSearch && matchStatus && matchStandard && matchBranch;
     });
 
     return {
@@ -300,7 +310,13 @@ export function AttendanceContent() {
       onLeave: filtered.filter(r => r.status === "On Leave").length,
       halfDay: filtered.filter(r => r.status === "Half-Day").length
     };
-  }, [records, search, statusFilter]);
+  }, [records, search, statusFilter, standardFilter, branchFilter, role]);
+
+  const handleRoleChange = (newRole: "STUDENT" | "TEACHER") => {
+    setRole(newRole);
+    setStandardFilter("");
+    setBranchFilter("");
+  };
 
   return (
     <div className="space-y-6">
@@ -320,7 +336,7 @@ export function AttendanceContent() {
           {/* Role Toggle Switch */}
           <div className="inline-flex rounded-xl border bg-muted p-1">
             <button
-              onClick={() => setRole("STUDENT")}
+              onClick={() => handleRoleChange("STUDENT")}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 role === "STUDENT" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"
               }`}
@@ -328,7 +344,7 @@ export function AttendanceContent() {
               Students
             </button>
             <button
-              onClick={() => setRole("TEACHER")}
+              onClick={() => handleRoleChange("TEACHER")}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 role === "TEACHER" ? "bg-white shadow-sm text-primary" : "text-muted-foreground"
               }`}
@@ -434,11 +450,39 @@ export function AttendanceContent() {
               />
             </div>
 
+            {/* Standard Filter */}
+            {role === "STUDENT" && (
+              <select
+                value={standardFilter}
+                onChange={(e) => setStandardFilter(e.target.value)}
+                className="rounded-xl border border-input bg-background h-9 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 min-w-[120px] cursor-pointer"
+              >
+                <option value="">All Classes</option>
+                {uniqueStandards.map((std, i) => (
+                  <option key={i} value={std as string}>{std as string}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Branch Filter */}
+            {role === "STUDENT" && (
+              <select
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="rounded-xl border border-input bg-background h-9 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 min-w-[120px] cursor-pointer"
+              >
+                <option value="">All Branches</option>
+                {uniqueBranches.map((br, i) => (
+                  <option key={i} value={br as string}>{br as string}</option>
+                ))}
+              </select>
+            )}
+
             {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-xl border border-input bg-background h-9 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 w-36 cursor-pointer"
+              className="rounded-xl border border-input bg-background h-9 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 min-w-[130px] cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="Present">Present</option>
@@ -580,28 +624,6 @@ export function AttendanceContent() {
                   <option value="On Leave">On Leave</option>
                   <option value="Half-Day">Half-Day</option>
                 </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="adjBioCode">Bio Code</Label>
-                  <Input
-                    id="adjBioCode"
-                    type="text"
-                    value={editBioCode}
-                    onChange={(e) => setEditBioCode(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="adjStudentId">Student ID</Label>
-                  <Input
-                    id="adjStudentId"
-                    type="text"
-                    value={editStudentId}
-                    onChange={(e) => setEditStudentId(e.target.value)}
-                    disabled
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

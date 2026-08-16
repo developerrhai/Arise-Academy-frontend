@@ -16,10 +16,7 @@ export function ChatGroupList() {
   };
 
   return (
-    <div className={cn(
-      "border-r border-border/70 flex-col bg-background/50",
-      activeGroupId ? "hidden md:flex md:w-72 shrink-0" : "flex w-full md:w-72 shrink-0"
-    )}>
+    <div className="w-72 border-r border-border/70 flex flex-col bg-background/50">
       <div className="p-4 border-b border-border/70">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />

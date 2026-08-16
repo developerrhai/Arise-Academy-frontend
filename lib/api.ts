@@ -9,7 +9,7 @@
  *   const students = await studentsApi.getAll({ standard: "10" })
  */
 
-const BASE = "https://institute-api.rhaitech.online/arise/api" || "https://institute-api.rhaitech.online/arise/api";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
 // const BASE = RAW_BASE.replace(/\/+$/, "");
 
 /* ── token helpers ──────────────────────────────────────── */
@@ -139,7 +139,6 @@ export const teacherUpdatesApi = {
   remove: (id: string | number) => del(`/teacher-updates/${id}`),
 };
 
-
 /* ══════════════════════════════════════════════════════════
    INQUIRIES
 ══════════════════════════════════════════════════════════ */
@@ -230,6 +229,25 @@ export const staffApi = {
 
 
 
+/* ══════════════════════════════════════════════════════════
+   BRANCHES
+══════════════════════════════════════════════════════════ */
+export const branchesApi = {
+  getAll: () => get("/branches"),
+  create: (data: Record<string, unknown>) => post("/branches", data),
+  update: (id: string | number, data: Record<string, unknown>) => put(`/branches/${id}`, data),
+  remove: (id: string | number) => del(`/branches/${id}`),
+};
+
+/* ══════════════════════════════════════════════════════════
+   BATCHES
+══════════════════════════════════════════════════════════ */
+export const batchesApi = {
+  getByBranch: (branchId: string | number) => get(`/batches/${branchId}`),
+  create: (data: Record<string, unknown>) => post("/batches", data),
+  update: (id: string | number, data: Record<string, unknown>) => put(`/batches/${id}`, data),
+  remove: (id: string | number) => del(`/batches/${id}`),
+};
 
 /* ══════════════════════════════════════════════════════════
    DASHBOARD
@@ -333,5 +351,45 @@ export const notificationsApi = {
     get(`/notifications/history?limit=${limit}&offset=${offset}`),
 };
 
+/* ══════════════════════════════════════════════════════════
+   TIMETABLE
+══════════════════════════════════════════════════════════ */
+export const timetableApi = {
+  getMonth: (batch: string, year: number, month: number) =>
+    get(`/timetable/${encodeURIComponent(batch)}/${year}/${month}`),
+  saveConfig: (data: Record<string, unknown>) => post("/timetable/config", data),
+  saveEntry: (data: Record<string, unknown>) => post("/timetable/entry", data),
+  updateEntry: (id: number | string, data: Record<string, unknown>) => put(`/timetable/entry/${id}`, data),
+  deleteEntry: (id: number | string) => del(`/timetable/entry/${id}`),
+  copyMonth: (data: Record<string, unknown>) => post("/timetable/copy-month", data),
+  getBatches: () => get("/timetable/batches"),
+  viewMonth: (batch: string, year: number, month: number) =>
+    get(`/timetable/view/${encodeURIComponent(batch)}/${year}/${month}`),
+};
 
+/* ══════════════════════════════════════════════════════════
+   INVENTORY
+══════════════════════════════════════════════════════════ */
+export const inventoryApi = {
+  // Items
+  getItems:    (filters: { category?: string; search?: string } = {}) =>
+    get(`/inventory/items${qs(filters)}`),
+  createItem:  (data: Record<string, unknown>) => post("/inventory/items", data),
+  updateItem:  (id: number, data: Record<string, unknown>) => put(`/inventory/items/${id}`, data),
+  deleteItem:  (id: number) => del(`/inventory/items/${id}`),
+  getSummary:  () => get("/inventory/items/summary"),
 
+  // Distributions
+  getDistributions: (filters: {
+    item_id?: string; student_id?: string;
+    date_from?: string; date_to?: string;
+    search?: string;
+  } = {}) => get(`/inventory/distributions${qs(filters)}`),
+  distribute:       (data: Record<string, unknown>) => post("/inventory/distribute", data),
+  undoDistribution: (id: number) => del(`/inventory/distributions/${id}`),
+  getStudentItems:  (studentId: number) => get(`/inventory/student/${studentId}/items`),
+
+  // Exports
+  exportItemsUrl: () => `${BASE}/inventory/export/items`,
+  exportDistributionsUrl: (params: string) => `${BASE}/inventory/export/distributions${params}`,
+};

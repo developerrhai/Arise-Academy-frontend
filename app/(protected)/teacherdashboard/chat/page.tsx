@@ -8,8 +8,7 @@ export default function TeacherChatPage() {
     <DashboardShell title="Group Chat">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Group Chat</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mt-2">
             Communicate with your classes and administration.
           </p>
         </div>

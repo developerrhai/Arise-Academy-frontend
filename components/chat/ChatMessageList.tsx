@@ -2,7 +2,7 @@
 
 import { useChatStore, ChatMessage as ChatMessageType } from "@/lib/chatStore";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
@@ -11,17 +11,16 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
   const messages = messagesFromStore || [];
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Get current user id from localStorage token/info for self-styling
-  let currentUserId = -1;
-  let currentUserRole = "";
-  try {
-     const info = localStorage.getItem("userInfo");
-     if (info) {
-       const parsed = JSON.parse(info);
-       currentUserId = parsed.id;
-       currentUserRole = parsed.role;
-     }
-  } catch (e) {}
+  const [currentUserId, setCurrentUserId] = useState(-1);
+
+  useEffect(() => {
+    try {
+      const info = localStorage.getItem("userInfo");
+      if (info) {
+        setCurrentUserId(JSON.parse(info).id);
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,8 +37,7 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMe = msg.sender_id === currentUserId && 
-                         msg.sender_role?.toLowerCase() === currentUserRole?.toLowerCase();
+            const isMe = msg.sender_id === currentUserId;
             
             return (
               <div
@@ -66,7 +64,7 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
                   {msg.message_text}
                 </div>
                 <span className="text-[10px] text-muted-foreground mt-1 mx-1 opacity-70">
-                  {msg.created_at ? (() => { try { return format(new Date(msg.created_at), "h:mm a") } catch(e) { return "" } })() : ""}
+                  {format(new Date(msg.created_at), "h:mm a")}
                 </span>
               </div>
             );

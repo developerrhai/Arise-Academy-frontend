@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, Settings, Sparkles, GraduationCap, LogOut, MessageSquare } from "lucide-react";
+import { BookOpen, Home, Settings, Sparkles, GraduationCap, LogOut, MessageSquare, FileText, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearToken } from "@/lib/api";
 
@@ -14,6 +14,8 @@ const items = [
   { title: "Homework", url: "/teacherdashboard/homework", icon: BookOpen },
   { title: "Teaching Logs", url: "/teacherdashboard/teaching-logs", icon: BookOpen },
   { title: "Group Chat", url: "/teacherdashboard/chat", icon: MessageSquare },
+  { title: "Assessments", url: "/teacherdashboard/performanceanalysis", icon: FileText },
+  { title: "Timetable", url: "/teacherdashboard/timetable", icon: Calendar },
   { title: "Settings", url: "/teacherdashboard/settings", icon: Settings },
 ];
 
@@ -64,7 +66,7 @@ export function DashboardSidebar() {
       <div className="m-3 rounded-2xl p-4 bg-sidebar-accent/60 border border-sidebar-border">
         <div className="text-xs text-sidebar-foreground/70">Pro tip</div>
         <div className="mt-1 text-sm font-medium leading-snug">
-          Organize notes by chapter to revise 3× faster.
+          Organize notes by chapter to revise 3Ã— faster.
         </div>
       </div>
        <div className="px-3 pb-3">

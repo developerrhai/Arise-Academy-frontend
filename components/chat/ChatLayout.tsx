@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import { useChatStore, ChatGroup } from "@/lib/chatStore";
 import { chatGroupsApi } from "@/lib/api";
@@ -10,20 +10,26 @@ import { toast } from "sonner";
 
 export function ChatLayout() {
   const { setGroups, setActiveGroup, addMessage, activeGroupId } = useChatStore();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // 1. Fetch groups from API
+    // Detect user role
+    let userRole = "";
+    try {
+      const info = localStorage.getItem("userInfo");
+      if (info) {
+        userRole = JSON.parse(info).role || "";
+      }
+    } catch (e) {}
+    const admin = userRole === "admin" || userRole === "ADMIN";
+    setIsAdmin(admin);
+
+    // 1. Fetch groups from API — admin sees all, others see their own
     const loadGroups = async () => {
       try {
-        let isAdmin = false;
-        try {
-          const info = localStorage.getItem("userInfo");
-          if (info) {
-            isAdmin = JSON.parse(info).role === "admin";
-          }
-        } catch (e) {}
-
-        const res = isAdmin ? await chatGroupsApi.getAll() : await chatGroupsApi.getMyGroups();
+        const res = admin
+          ? await chatGroupsApi.getAll()
+          : await chatGroupsApi.getMyGroups();
         if (res.success) {
           setGroups(res.data);
           if (res.data.length > 0 && !activeGroupId) {

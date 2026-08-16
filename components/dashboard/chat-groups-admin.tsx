@@ -37,13 +37,7 @@ export function ChatGroupsAdmin() {
         setDesc("");
         
         // Refresh groups
-        let isAdmin = false;
-        try {
-          const info = localStorage.getItem("userInfo");
-          if (info) isAdmin = JSON.parse(info).role === "admin";
-        } catch (e) {}
-
-        const groupsRes = isAdmin ? await chatGroupsApi.getAll() : await chatGroupsApi.getMyGroups();
+        const groupsRes = await chatGroupsApi.getAll();
         if (groupsRes.success) setGroups(groupsRes.data);
       } else {
         toast.error(res.message || "Failed to create group");
@@ -68,7 +62,7 @@ export function ChatGroupsAdmin() {
         
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
               <PlusCircle className="h-4 w-4" />
               New Group
             </Button>
