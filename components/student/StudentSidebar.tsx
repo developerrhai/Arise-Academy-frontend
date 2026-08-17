@@ -30,7 +30,7 @@ const navItems = [
   { title: "Security", url: "/student/change-password", icon: Shield },
 ];
 
-export function StudentSidebar() {
+export function StudentSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const logout = useAuthStore((state) => state.logout);
 
@@ -42,7 +42,7 @@ export function StudentSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <aside className={cn("hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border", className)}>
       {/* Brand logo */}
       <div className="px-6 py-6 flex items-center gap-2">
         <div
