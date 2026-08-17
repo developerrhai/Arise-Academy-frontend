@@ -33,6 +33,7 @@ interface AttendanceRecord {
     name: string;
     contact: string;
     standard: string;
+    course: string;
     branch: string;
     code: string;
   };
@@ -528,7 +529,7 @@ export function AttendanceContent() {
                         <td className="py-3.5 px-4 text-xs text-muted-foreground">{r.student.contact || "—"}</td>
                         <td className="py-3.5 px-4 text-xs">
                           {role === "STUDENT"
-                            ? `${r.student.standard} ${r.student.branch}`.trim() || "General"
+                            ? `${r.student.standard} ${r.student.course}`.trim() || "General"
                             : "Faculty"}
                         </td>
                         <td className="py-3.5 px-4">
