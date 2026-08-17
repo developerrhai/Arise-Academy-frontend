@@ -33,7 +33,7 @@ interface AttendanceRecord {
     name: string;
     contact: string;
     standard: string;
-    course: string;
+    branch: string;
     code: string;
   };
   role: "STUDENT" | "TEACHER";
@@ -238,7 +238,7 @@ export function AttendanceContent() {
       "Role": r.role,
       "Contact": r.student.contact || "N/A",
       "Class/Standard": r.student.standard || "N/A",
-      "Course": r.student.course || "N/A",
+      "Branch": r.student.branch || "N/A",
       "Date": r.date,
       "Punch In": r.punchIn || "—",
       "Punch Out": r.punchOut || "—",
@@ -284,7 +284,7 @@ export function AttendanceContent() {
   }, [records]);
 
   const uniqueBranches = useMemo(() => {
-    return Array.from(new Set(records.map(r => r.student?.course).filter(Boolean))).sort();
+    return Array.from(new Set(records.map(r => r.student?.branch).filter(Boolean))).sort();
   }, [records]);
 
   // Compute summary stats dynamically
@@ -297,7 +297,7 @@ export function AttendanceContent() {
                           (r.student?.contact?.toLowerCase() || "").includes(q);
       const matchStatus = !statusFilter || r.status === statusFilter;
       const matchStandard = role !== "STUDENT" || !standardFilter || r.student?.standard === standardFilter;
-      const matchBranch = role !== "STUDENT" || !branchFilter || r.student?.course === branchFilter;
+      const matchBranch = role !== "STUDENT" || !branchFilter || r.student?.branch === branchFilter;
       return matchSearch && matchStatus && matchStandard && matchBranch;
     });
 
@@ -528,7 +528,7 @@ export function AttendanceContent() {
                         <td className="py-3.5 px-4 text-xs text-muted-foreground">{r.student.contact || "—"}</td>
                         <td className="py-3.5 px-4 text-xs">
                           {role === "STUDENT"
-                            ? `${r.student.standard} ${r.student.course}`.trim() || "General"
+                            ? `${r.student.standard} ${r.student.branch}`.trim() || "General"
                             : "Faculty"}
                         </td>
                         <td className="py-3.5 px-4">
