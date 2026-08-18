@@ -73,6 +73,7 @@ export function AttendanceContent() {
   const [editStatus, setEditStatus] = useState<AttendanceRecord["status"]>("Present");
   const [editPunchIn, setEditPunchIn] = useState("");
   const [editPunchOut, setEditPunchOut] = useState("");
+  const [editBioCode, setEditBioCode] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Fetch Attendance logs
@@ -165,6 +166,7 @@ export function AttendanceContent() {
     setEditStatus(record.status);
     setEditPunchIn(record.punchIn || "");
     setEditPunchOut(record.punchOut || "");
+    setEditBioCode(record.student.code || "");
     setIsEditOpen(true);
   };
 
@@ -181,7 +183,7 @@ export function AttendanceContent() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          studentCode: editingRecord.student.code,
+          studentCode: editBioCode || editingRecord.student.code,
           date,
           status: editStatus,
           punchIn: editPunchIn || null,
@@ -192,6 +194,20 @@ export function AttendanceContent() {
       });
 
       if (!res.ok) throw new Error("Failed to record manual adjustment.");
+
+      // Also update bio code if it changed
+      if (editBioCode !== (editingRecord.student.code || "")) {
+        const bioRes = await fetch(`${apiBase}/attendance/bio-code`, {
+          method: "PUT",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: editingRecord.student.id,
+            role,
+            newBioCode: editBioCode
+          })
+        });
+        if (!bioRes.ok) throw new Error("Failed to update Bio Code");
+      }
 
       toast.success("Attendance adjusted successfully!");
       setIsEditOpen(false);
@@ -605,10 +621,21 @@ export function AttendanceContent() {
 
           {editingRecord && (
             <div className="space-y-4 py-2 text-sm">
-              <div className="bg-slate-50 p-3 rounded-xl border space-y-1">
+              <div className="bg-slate-50 p-3 rounded-xl border space-y-2">
                 <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">User Profile</p>
                 <p className="font-bold text-slate-800">{editingRecord.student.name} ({role})</p>
-                <p className="text-xs text-muted-foreground">ID: {editingRecord.student.code || "—"} • Batch: {editingRecord.batch.name}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Label htmlFor="adjBioCode" className="text-xs whitespace-nowrap">ID (Bio Code):</Label>
+                  <Input
+                    id="adjBioCode"
+                    type="text"
+                    className="h-7 text-xs w-32"
+                    value={editBioCode}
+                    onChange={(e) => setEditBioCode(e.target.value)}
+                    placeholder="e.g. 5001"
+                  />
+                  <span className="text-xs text-muted-foreground ml-auto">Batch: {editingRecord.batch.name}</span>
+                </div>
               </div>
 
               <div className="space-y-1.5">
