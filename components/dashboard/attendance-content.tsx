@@ -176,6 +176,22 @@ export function AttendanceContent() {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
+
+      // 1. Update bio code first if it changed, so the attendance record lookup succeeds
+      if (editBioCode !== (editingRecord.student.code || "")) {
+        const bioRes = await fetch(`${apiBase}/attendance/bio-code`, {
+          method: "PUT",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: editingRecord.student.id,
+            role,
+            newBioCode: editBioCode
+          })
+        });
+        if (!bioRes.ok) throw new Error("Failed to update Bio Code");
+      }
+
+      // 2. Update attendance record
       const res = await fetch(`${apiBase}/attendance/record`, {
         method: "PUT",
         headers: {
@@ -193,20 +209,9 @@ export function AttendanceContent() {
         })
       });
 
-      if (!res.ok) throw new Error("Failed to record manual adjustment.");
-
-      // Also update bio code if it changed
-      if (editBioCode !== (editingRecord.student.code || "")) {
-        const bioRes = await fetch(`${apiBase}/attendance/bio-code`, {
-          method: "PUT",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: editingRecord.student.id,
-            role,
-            newBioCode: editBioCode
-          })
-        });
-        if (!bioRes.ok) throw new Error("Failed to update Bio Code");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "Failed to record manual adjustment.");
       }
 
       toast.success("Attendance adjusted successfully!");
