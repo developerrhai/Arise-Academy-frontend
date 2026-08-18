@@ -59,7 +59,6 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
                       ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-sm" 
                       : "bg-muted text-foreground rounded-2xl rounded-tl-sm"
                   )}
-                  style={isMe ? { background: "var(--gradient-primary)" } : {}}
                 >
                   {msg.message_text}
                 </div>
