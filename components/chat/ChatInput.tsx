@@ -42,8 +42,7 @@ export function ChatInput({ groupId }: { groupId: number }) {
           type="submit" 
           disabled={!text.trim() || isSending}
           size="icon"
-          className="rounded-full shrink-0 shadow-[var(--shadow-soft)]"
-          style={{ background: "var(--gradient-primary)" }}
+          className="rounded-full shrink-0 shadow-md bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <SendHorizontal className="h-4 w-4" />
         </Button>
