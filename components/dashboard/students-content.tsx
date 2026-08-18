@@ -16,7 +16,7 @@ import * as XLSX from "xlsx"
 interface Student {
   id: number; name: string; email?: string; phone: string; father_name: string; father_phone: string
   board: string; standard: string; course: string; location: string; fee: number; paid_fee: number
-  subjects: string[]
+  subjects: string[]; biometric_code?: string;
 }
 
 // ── Subject constants ──────────────────────────────────
@@ -69,6 +69,12 @@ export function StudentsContent() {
   const [fetchingPassword, setFetchingPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+
+  // Set Bio Code modal
+  const [bioStudent, setBioStudent] = useState<Student | null>(null)
+  const [bioModalOpen, setBioModalOpen] = useState(false)
+  const [newBioCode, setNewBioCode] = useState("")
+  const [bioSaving, setBioSaving] = useState(false)
 
   // ── Load ───────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -127,7 +133,7 @@ export function StudentsContent() {
     if (isNaN(val) || val < 0) { alert("Enter a valid fee amount"); return }
     setFeeSaving(true)
     try {
-      await studentsApi.update(feeStudent.id, { ...feeStudent, fee: val, subjects: feeStudent.subjects.join(",") })
+      await studentsApi.update(feeStudent.id, { ...feeStudent, fee: val, subjects: feeStudent.subjects.join(","), biometric_code: feeStudent.biometric_code })
       setStudents(prev => prev.map(s => s.id === feeStudent.id ? { ...s, fee: val } : s))
       setFeeModalOpen(false)
     } catch (err: any) { alert(err.message) }
@@ -149,7 +155,7 @@ export function StudentsContent() {
     }
     setPaySaving(true)
     try {
-      await studentsApi.update(payStudent.id, { ...payStudent, paid_fee: newPaid, subjects: payStudent.subjects.join(",") })
+      await studentsApi.update(payStudent.id, { ...payStudent, paid_fee: newPaid, subjects: payStudent.subjects.join(","), biometric_code: payStudent.biometric_code })
       setStudents(prev => prev.map(s => s.id === payStudent.id ? { ...s, paid_fee: newPaid } : s))
       setPayModalOpen(false)
     } catch (err: any) { alert(err.message) }
@@ -194,6 +200,31 @@ export function StudentsContent() {
       setPasswordModalOpen(false)
     } catch (err: any) { alert(err.message) }
     finally { setPasswordSaving(false) }
+  }
+
+  // ── Set Bio Code ───────────────────────────────────────
+  const openBioModal = (s: Student) => {
+    setBioStudent(s)
+    setNewBioCode(s.biometric_code || "")
+    setBioModalOpen(true)
+  }
+
+  const handleSaveBioCode = async () => {
+    if (!bioStudent) return
+    setBioSaving(true)
+    try {
+      await studentsApi.update(bioStudent.id, {
+        ...bioStudent,
+        biometric_code: newBioCode.trim(),
+        subjects: bioStudent.subjects.join(",")
+      })
+      setStudents(prev => prev.map(s =>
+        s.id === bioStudent.id ? { ...s, biometric_code: newBioCode.trim() } : s
+      ))
+      setBioModalOpen(false)
+      alert("Bio Code updated successfully!")
+    } catch (err: any) { alert(err.message) }
+    finally { setBioSaving(false) }
   }
 
   // ── Export ─────────────────────────────────────────────
@@ -355,6 +386,7 @@ export function StudentsContent() {
       await studentsApi.update(subjectStudent.id, {
         ...subjectStudent,
         subjects: editSubjects.join(","),
+        biometric_code: subjectStudent.biometric_code
       })
       setStudents(prev => prev.map(s =>
         s.id === subjectStudent.id ? { ...s, subjects: editSubjects } : s
@@ -537,6 +569,12 @@ export function StudentsContent() {
                               title="Manage Password"
                               onClick={() => openPasswordModal(s)}>
                               <Key className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline"
+                              className="h-8 w-8 p-0 text-cyan-600 hover:text-cyan-700 hover:border-cyan-300"
+                              title="Update Bio Code"
+                              onClick={() => openBioModal(s)}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
                             </Button>
                             <Button size="sm" variant="destructive" className="h-8 w-8 p-0"
                               onClick={() => handleDelete(s.id)}>
@@ -896,11 +934,53 @@ export function StudentsContent() {
             <Button variant="outline" onClick={() => setPayModalOpen(false)}>Cancel</Button>
             <Button onClick={handlePayFee} disabled={paySaving} className="bg-emerald-600 hover:bg-emerald-700">
               {paySaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirm Payment
+              Save Payment
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Bio Code Modal ─────────────────────────────────── */}
+      <Dialog open={bioModalOpen} onOpenChange={setBioModalOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" className="text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
+              Update Bio Code
+            </DialogTitle>
+          </DialogHeader>
+          {bioStudent && (
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-bold shrink-0">
+                  {bioStudent.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{bioStudent.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Current Bio Code: {bioStudent.biometric_code || "Not set"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-bio-code">New Biometric Code</Label>
+                <Input id="new-bio-code" type="text" value={newBioCode}
+                  onChange={e => setNewBioCode(e.target.value)}
+                  placeholder="Enter Smart Office ID (e.g. 5001)" autoFocus />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBioModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveBioCode} disabled={bioSaving} className="bg-cyan-600 hover:bg-cyan-700 text-white">
+              {bioSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Bio Code
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* ── Manage Password Modal ────────────────────────────── */}
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
         <DialogContent className="sm:max-w-md">
