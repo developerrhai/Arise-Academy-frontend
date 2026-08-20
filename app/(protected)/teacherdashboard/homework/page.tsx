@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Pencil, Trash2, Users, CheckCircle, Clock, FileText } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Users, CheckCircle, Clock, FileText, Upload } from "lucide-react";
 import { homeworkApi, studentsApi } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 
 const SUBJECTS = ["Math", "Science", "English", "SST", "Physics", "Chemistry", "Biology"];
 const BATCHES = [
@@ -36,7 +37,9 @@ export default function HomeworkPage() {
   const [newHw, setNewHw] = useState({
     chapter: "", topic: "", subject: "", branch: "", board: "", standard: "", dueDate: "", description: "", attachmentUrl: ""
   });
+  });
   const [saving, setSaving] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   // Edit Modal
   const [editOpen, setEditOpen] = useState(false);
@@ -66,6 +69,45 @@ export default function HomeworkPage() {
   useEffect(() => {
     fetchHomeworks();
   }, [fetchHomeworks]);
+
+  // Handle File Upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAttachment(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const token = useAuthStore.getState().token;
+      // Use standard fetch to the new API endpoint
+      const res = await fetch("https://institute-api.rhaitech.online/arise/api/homework-attachments/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success && json.data?.url) {
+        if (isEdit) {
+          setEditHw({ ...editHw, attachment_url: json.data.url });
+        } else {
+          setNewHw({ ...newHw, attachmentUrl: json.data.url });
+        }
+      } else {
+        alert(json.message || "File upload failed");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("An error occurred while uploading the file.");
+    } finally {
+      setUploadingAttachment(false);
+      if (e.target) e.target.value = ''; // Reset input
+    }
+  };
 
   // Handle Homework Assignment
   const handleAssign = async () => {
@@ -336,8 +378,23 @@ export default function HomeworkPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="attachment">Attachment URL (Optional)</Label>
-              <Input id="attachment" value={newHw.attachmentUrl} onChange={e => setNewHw({...newHw, attachmentUrl: e.target.value})} placeholder="e.g. PDF link or Google Drive link" />
+              <Label htmlFor="attachment">Attachment File (Optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input 
+                  id="attachment" 
+                  type="file" 
+                  accept="image/*,application/pdf"
+                  onChange={(e) => handleFileUpload(e, false)} 
+                  disabled={uploadingAttachment}
+                  className="flex-1"
+                />
+                {uploadingAttachment && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              </div>
+              {newHw.attachmentUrl && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-emerald-600 font-medium">
+                  <CheckCircle className="h-4 w-4" /> File uploaded successfully
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -377,8 +434,25 @@ export default function HomeworkPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-attachment">Attachment URL</Label>
-                <Input id="edit-attachment" value={editHw.attachment_url || ""} onChange={e => setEditHw({...editHw, attachment_url: e.target.value})} />
+                <Label htmlFor="edit-attachment">Attachment File</Label>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    id="edit-attachment" 
+                    type="file" 
+                    accept="image/*,application/pdf"
+                    onChange={(e) => handleFileUpload(e, true)} 
+                    disabled={uploadingAttachment}
+                    className="flex-1"
+                  />
+                  {uploadingAttachment && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+                </div>
+                {editHw.attachment_url && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <a href={editHw.attachment_url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                      <FileText className="h-4 w-4" /> View Current Attachment
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}

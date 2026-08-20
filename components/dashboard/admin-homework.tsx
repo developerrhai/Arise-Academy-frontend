@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Search, BookOpen, Users, CheckCircle, Clock, Eye, AlertCircle, Calendar } from "lucide-react"
+import { Loader2, Search, BookOpen, Users, CheckCircle, Clock, Eye, AlertCircle, Calendar, FileText } from "lucide-react"
 import { homeworkApi } from "@/lib/api"
 
 interface Homework {
@@ -251,6 +251,23 @@ export function AdminHomeworkContent() {
                 <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-100 text-xs text-amber-800">
                   <span className="font-bold block mb-1">Homework Details:</span>
                   <p className="whitespace-pre-wrap">{selectedHw.description}</p>
+                </div>
+              )}
+
+              {selectedHw?.attachment_url && (
+                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/20">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-sm text-primary">Attachment File</span>
+                  </div>
+                  <a
+                    href={selectedHw.attachment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm bg-primary text-primary-foreground font-medium px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Download
+                  </a>
                 </div>
               )}
 
