@@ -55,7 +55,16 @@ export function ChatMessageList({ groupId }: { groupId: number }) {
      try {
         const token = localStorage.getItem("token");
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
-        const res = await fetch(`${apiUrl}/api/chat-messages/${messageId}`, {
+        // Remove trailing slash if it exists
+        const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        
+        // Some NEXT_PUBLIC_API_URL values already include /api (like arise/api), some don't.
+        // We will assume NEXT_PUBLIC_API_URL includes the base path up to /api in production.
+        const endpoint = baseUrl.endsWith('/api') 
+           ? `${baseUrl}/chat-messages/${messageId}` 
+           : `${baseUrl}/api/chat-messages/${messageId}`;
+
+        const res = await fetch(endpoint, {
            method: "DELETE",
            headers: {
              Authorization: `Bearer ${token}`
