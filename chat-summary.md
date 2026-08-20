@@ -179,3 +179,25 @@ Addressed several frontend usability bugs affecting the layout and data-binding:
 - **GitHub Repositories**: Committed and pushed clean working trees to `developerrhai/Arise-Academy-frontend` (`main` branch) and `developerrhai/Arise-Academy-backend` (`main` branch).
 - **EC2 Deployment**: Deployed backend code to EC2 `/app/arise-backend/`, executed database migrations (`node src/db/migrate.js`), installed `axios` dependency, and verified PM2 process `arise-backend` (ID 2, Port 5003, ONLINE with 0 active errors).
 
+---
+
+## 11. Multi-Tenant Data Fragmentation Fix & Database Merge (August 17, 2026)
+
+### Data Leak Resolution
+- Fixed a multi-tenant data leak bug on the Attendance and Teachers API routes.
+- **Attendance Route**: Updated `getAttendanceForDate` to filter students and teachers by `admin_id`.
+- **Teachers Route**: Switched the `GET /api/teachers` route to use `auth, c.getAll` instead of the unfiltered `c.getTeachers` controller function, ensuring teachers are correctly scoped to the logged-in admin's institute.
+- Pushed backend code to GitHub and restarted the live PM2 instance on EC2.
+
+### Database Merge Operation
+- Identified that the client had accidentally created 5 different Admin accounts within the `arise` database, causing the 376 students and 14 teachers to be scattered across fragmented instances.
+- Took a full database backup (`arise_backup_merge_aug17.sql`) on the EC2 server.
+- Executed a global database migration to securely merge all scattered data (`students`, `teachers`, `inquiries`, `appointments`, `finance_records`, etc.) into the primary Admin ID 28.
+- Deleted the redundant, empty admin accounts to prevent future login collisions.
+- **Result**: Exactly 1 unified admin remains (`ariseacademyopt@gmail.com`) controlling all 376 students and 14 teachers perfectly.
+
+### Credentials & System State
+- **Admin**: `ariseacademyopt@gmail.com` / `admin123`
+- **Teacher (Test)**: `testteacher@arise.com` / `password123`
+- **Branches**: Verified that "Akurdi" is the only branch currently existing in the DB. System-wide dropdowns correctly reflect only explicitly created branches via the Admin Dashboard.
+

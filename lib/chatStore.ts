@@ -15,6 +15,9 @@ export type ChatMessage = {
   sender_role: string;
   sender_name: string;
   message_text: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
   created_at: string;
 };
 
@@ -29,6 +32,7 @@ interface ChatState {
   
   addMessage: (groupId: number, message: ChatMessage) => void;
   setMessages: (groupId: number, messages: ChatMessage[]) => void;
+  removeMessage: (groupId: number, messageId: number) => void;
   
   setTyping: (groupId: number, userId: number, isTyping: boolean) => void;
 }
@@ -63,6 +67,17 @@ export const useChatStore = create<ChatState>((set) => ({
         [groupId]: newMessages
       }
     })),
+    
+  removeMessage: (groupId, messageId) => 
+    set((state) => {
+      const existing = state.messages[groupId] || [];
+      return {
+        messages: {
+          ...state.messages,
+          [groupId]: existing.filter(m => m.id !== messageId)
+        }
+      };
+    }),
     
   setTyping: (groupId, userId, isTyping) =>
     set((state) => {
