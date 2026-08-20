@@ -97,8 +97,8 @@ Clients **MUST** invoke this endpoint immediately after authentication, on appli
 #### Request Body
 ```json
 {
-  "targetUserId": 101,
-  "targetRole": "STUDENT",
+  "userId": 101,
+  "userRole": "STUDENT",
   "title": "Assignment Reminder",
   "body": "Your Mathematics homework is due tomorrow.",
   "data": {
@@ -111,8 +111,8 @@ Clients **MUST** invoke this endpoint immediately after authentication, on appli
 #### Field Description
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `targetUserId` | Integer / String | Yes | Target user's database ID. |
-| `targetRole` | String | Yes | Role of target user (`STUDENT`, `TEACHER`, `ADMIN`). |
+| `userId` | Integer / String | Yes | Target user's database ID. |
+| `userRole` | String | Yes | Role of target user (`STUDENT`, `TEACHER`, `ADMIN`). |
 | `title` | String | Yes | Notification title visible in notification tray. |
 | `body` | String | Yes | Notification body text. |
 | `data` | Object | No | Key-value string dictionary for deep-linking / custom payload. |
@@ -179,10 +179,12 @@ Clients **MUST** invoke this endpoint immediately after authentication, on appli
 #### Request Body
 ```json
 {
-  "targetRole": "STUDENT",
-  "userIds": [12, 15, 29, 34],
   "title": "Batch 10th-A Special Class",
   "body": "Extra revision class scheduled today at 4:00 PM.",
+  "filters": {
+    "targetRole": "STUDENT",
+    "userIds": [12, 15, 29, 34]
+  },
   "data": {
     "classId": "10A"
   }
