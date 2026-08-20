@@ -112,7 +112,7 @@ export default function StudentHomeworkPage() {
 
       const json = await res.json();
       const profile = json?.profile;
-      const batchName = `${profile?.standard ?? ""} ${profile?.course ?? ""}`.trim();
+      const batchName = `${profile?.standard ?? ""} ${profile?.board ?? ""}`.trim();
 
       if (batchName) {
         const hwData = await homeworkApi.getByBatch(batchName);

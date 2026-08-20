@@ -219,7 +219,7 @@ export default function StudentDashboard() {
 
       // Build batch name securely using optional chaining
       const profile = json?.profile;
-      const batchName = `${profile?.standard ?? ""} ${profile?.course ?? ""}`.trim();
+      const batchName = `${profile?.standard ?? ""} ${profile?.board ?? ""}`.trim();
 
       if (batchName) {
         try {
