@@ -70,11 +70,21 @@ export function ChatInput({ groupId }: { groupId: number }) {
       try {
         const token = localStorage.getItem("token");
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
-        const res = await fetch(`${apiUrl}/api/chat/upload`, {
+        // Remove trailing slash if it exists and don't add /api because NEXT_PUBLIC_API_URL has it
+        const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        
+        const res = await fetch(`${baseUrl}/chat/upload`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData
         });
+        
+        if (res.status === 413) {
+           toast.error("File is too large! Please select a smaller file.");
+           setIsSending(false);
+           return;
+        }
+        
         const data = await res.json();
         
         if (data.success) {
