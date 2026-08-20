@@ -7,6 +7,7 @@ import { chatGroupsApi } from "@/lib/api";
 import { ChatGroupList } from "./ChatGroupList";
 import { ChatRoom } from "./ChatRoom";
 import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export function ChatLayout() {
   const { setGroups, setActiveGroup, addMessage, activeGroupId } = useChatStore();
@@ -63,9 +64,12 @@ export function ChatLayout() {
   }, []);
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-card border border-border/70 rounded-xl shadow-[var(--shadow-soft)] overflow-hidden">
-      <ChatGroupList />
-      <ChatRoom />
-    </div>
+    <>
+      <Toaster richColors position="top-center" />
+      <div className="flex h-[calc(100vh-8rem)] bg-card border border-border/70 rounded-xl shadow-[var(--shadow-soft)] overflow-hidden">
+        <ChatGroupList />
+        <ChatRoom />
+      </div>
+    </>
   );
 }
