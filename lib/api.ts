@@ -308,6 +308,21 @@ export const homeworkApi = {
     put(`/homework/${id}/status`, { statuses }),
   getHomeworkStudents: (id: string | number) => get(`/homework/${id}/students`),
   remove: (id: string | number) => del(`/homework/${id}`),
+  uploadAttachment: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = getToken();
+    const res = await fetch(`${BASE}/homework-attachments/upload`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "Upload failed");
+    return json;
+  },
 };
 
 export const teachingLogsApi = {

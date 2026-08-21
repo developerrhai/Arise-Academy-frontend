@@ -76,33 +76,22 @@ export default function HomeworkPage() {
     if (!file) return;
 
     setUploadingAttachment(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
+    
     try {
-      const token = useAuthStore.getState().token;
-      // Use standard fetch to the new API endpoint
-      const res = await fetch("https://institute-api.rhaitech.online/arise/api/homework-attachments/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData,
-      });
+      const res = await homeworkApi.uploadAttachment(file);
 
-      const json = await res.json();
-      if (json.success && json.data?.url) {
+      if (res.success && res.data?.url) {
         if (isEdit) {
-          setEditHw({ ...editHw, attachment_url: json.data.url });
+          setEditHw({ ...editHw, attachment_url: res.data.url });
         } else {
-          setNewHw({ ...newHw, attachmentUrl: json.data.url });
+          setNewHw({ ...newHw, attachmentUrl: res.data.url });
         }
       } else {
-        alert(json.message || "File upload failed");
+        alert(res.message || "File upload failed");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
-      alert("An error occurred while uploading the file.");
+      alert(err.message || "An error occurred while uploading the file.");
     } finally {
       setUploadingAttachment(false);
       if (e.target) e.target.value = ''; // Reset input
