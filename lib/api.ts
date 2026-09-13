@@ -118,6 +118,7 @@ export const teachersApi = {
     put(`/teachers/${id}`, data),
   remove: (id: string | number) => del(`/teachers/${id}`),
   setPassword: (id: string | number, data: Record<string, unknown>) => put(`/teachers/${id}/password`, data),
+  getPassword: (id: string | number) => get(`/teachers/${id}/password`),
 };
 
 /* ══════════════════════════════════════════════════════════
