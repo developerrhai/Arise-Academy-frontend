@@ -156,13 +156,29 @@ export function BranchesBatchesContent() {
   const openBatchDialog = (batch: any = null) => {
     setEditingBatch(batch)
     if (batch) {
+      const safeDate = (val: any) => {
+        if (!val) return "";
+        try {
+          const d = new Date(val);
+          if (isNaN(d.getTime())) return String(val).split('T')[0];
+          return [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, '0'),
+            String(d.getDate()).padStart(2, '0')
+          ].join('-');
+        } catch {
+          return String(val).split('T')[0];
+        }
+      };
+      const safeTime = (val: any) => val ? String(val).substring(0, 5) : "";
+      
       setBatchForm({
-        branch_id: batch.branch_id.toString(),
-        batch_name: batch.batch_name,
-        start_time: batch.start_time,
-        end_time: batch.end_time,
-        batch_start_date: batch.batch_start_date.split('T')[0], // format for date input
-        batch_end_date: batch.batch_end_date.split('T')[0]
+        branch_id: batch.branch_id ? batch.branch_id.toString() : "",
+        batch_name: batch.batch_name || "",
+        start_time: safeTime(batch.start_time),
+        end_time: safeTime(batch.end_time),
+        batch_start_date: safeDate(batch.batch_start_date),
+        batch_end_date: safeDate(batch.batch_end_date)
       })
     } else {
       setBatchForm({

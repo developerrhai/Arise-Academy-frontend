@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-// import { Users, Eye, Trash2, Phone, User, Mail, MapPin, Building, Loader2 } from "lucide-react"
-import { Users, Eye, Trash2, Phone, User, Mail, MapPin, Building, Loader2, FileSpreadsheet } from "lucide-react"
-import { teachersApi } from "@/lib/api"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Users, Eye, Trash2, Phone, User, Mail, MapPin, Building, Loader2, FileSpreadsheet, Plus, Key } from "lucide-react"
+import { teachersApi, getToken } from "@/lib/api"
+import * as XLSX from "xlsx"
 
 interface Teacher {
   id: number; name: string; email: string; phone: string
@@ -26,6 +29,37 @@ export function TeachersContent() {
       .catch(console.error).finally(() => setLoading(false))
   }, [])
 
+  // Selection & Export State
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [includeMonthlyAttendance, setIncludeMonthlyAttendance] = useState(false)
+  const [attendanceMonth, setAttendanceMonth] = useState<string>(new Date().toISOString().substring(0, 7))
+  const [selectedExportColumns, setSelectedExportColumns] = useState<Set<string>>(
+    new Set(["ID", "Name", "Email", "Phone", "Institute", "Location", "Subjects"])
+  )
+
+  const toggleSelection = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAllSelection = () => {
+    if (selectedIds.size === teachers.length && teachers.length > 0) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(teachers.map(t => t.id)))
+    }
+  }
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [teachers])
+
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this teacher?")) return
     try {
@@ -34,46 +68,114 @@ export function TeachersContent() {
     } catch (err: any) { alert(err.message) }
   }
 
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", institute: "", location: "" })
 
-   const handleExportExcel = () => {
-    if (!teachers.length) {
-      alert("No teachers to export")
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await teachersApi.create({ ...addForm, subjects: [] })
+      setAddOpen(false)
+      setAddForm({ name: "", email: "", phone: "", institute: "", location: "" })
+      const res: any = await teachersApi.getAll()
+      setTeachers(res.data)
+    } catch (err: any) { alert(err.message) }
+  }
+
+  const [passwordOpen, setPasswordOpen] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ id: 0, password: "" })
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await teachersApi.setPassword(passwordForm.id, { password: passwordForm.password })
+      setPasswordOpen(false)
+      setPasswordForm({ id: 0, password: "" })
+      alert("Password set successfully!")
+    } catch (err: any) { alert(err.message) }
+  }
+
+  const handleExportExcel = () => {
+    setExportModalOpen(true)
+  }
+
+  const confirmExportExcel = async () => {
+    const listToExport = selectedIds.size > 0
+      ? teachers.filter(t => selectedIds.has(t.id))
+      : teachers
+
+    if (listToExport.length === 0) {
+      alert("No teachers to export.")
       return
     }
 
-    const headers = [
-      "ID",
-      "Name",
-      "Email",
-      "Phone",
-      "Institute",
-      "Location",
-      "Subjects",
-    ]
+    setIsExporting(true)
+    try {
+      let attendanceData: Record<number, any> = {}
+      let sortedDates: string[] = []
 
-    const rows = teachers.map((t) => [
-      t.id,
-      t.name || "",
-      t.email || "",
-      t.phone || "",
-      t.institute || "",
-      t.location || "",
-      (t.subjects || []).join(", "),
-    ])
+      if (includeMonthlyAttendance) {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api"
+        const res = await fetch(`${apiBase}/attendance/monthly-report?month=${attendanceMonth}&role=TEACHER`, {
+          headers: { "Authorization": `Bearer ${getToken()}` }
+        })
+        
+        if (res.ok) {
+          const json = await res.json()
+          if (json.success && json.report) {
+            const allDates = new Set<string>()
+            json.report.forEach((u: any) => {
+              attendanceData[u.id] = u.attendance || {}
+              Object.keys(u.attendance || {}).forEach(d => allDates.add(d))
+            })
+            sortedDates = Array.from(allDates).sort()
+          }
+        } else {
+          console.error("Failed to fetch monthly attendance for export")
+        }
+      }
 
-    const esc = (value: string | number) => `"${String(value).replace(/"/g, "\"\"")}"`
-    const csv = [headers, ...rows].map((row) => row.map(esc).join(",")).join("\n")
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `teachers_${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+      const data = listToExport.map(t => {
+        const row: any = {}
+        if (selectedExportColumns.has("ID")) row["ID"] = t.id
+        if (selectedExportColumns.has("Name")) row["Name"] = t.name
+        if (selectedExportColumns.has("Email")) row["Email"] = t.email || ""
+        if (selectedExportColumns.has("Phone")) row["Phone"] = t.phone || ""
+        if (selectedExportColumns.has("Institute")) row["Institute"] = t.institute || ""
+        if (selectedExportColumns.has("Location")) row["Location"] = t.location || ""
+        if (selectedExportColumns.has("Subjects")) row["Subjects"] = (t.subjects || []).join(", ")
+
+        if (includeMonthlyAttendance) {
+          let present = 0, absent = 0, late = 0, onLeave = 0
+          sortedDates.forEach(d => {
+            const status = attendanceData[t.id]?.[d]?.status || "—"
+            row[d] = status
+            if (status === "Present") present++
+            else if (status === "Absent") absent++
+            else if (status === "Late") late++
+            else if (status === "On Leave") onLeave++
+          })
+          row["Total Present"] = present
+          row["Total Absent"] = absent
+          row["Total Late"] = late
+          row["Total Leave"] = onLeave
+        }
+
+        return row
+      })
+
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers")
+      XLSX.writeFile(workbook, `Teachers_Export_${new Date().getTime()}.xlsx`)
+      setExportModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert("An error occurred during export.")
+    } finally {
+      setIsExporting(false)
+    }
   }
-
   return (
     <div className="space-y-6 pt-12 lg:pt-0">
       <Card>
@@ -82,10 +184,16 @@ export function TeachersContent() {
           <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
             <Users className="h-6 w-6" /> Teacher Management
           </CardTitle>
-              <Button onClick={handleExportExcel} variant="outline">
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export Excel
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleExportExcel} variant="outline">
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              {selectedIds.size > 0 ? `Export Selected (${selectedIds.size})` : 'Export All'}
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Teacher
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -95,6 +203,14 @@ export function TeachersContent() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-900">
+                    <TableHead className="w-12 text-center">
+                      <Checkbox 
+                        checked={teachers.length > 0 && selectedIds.size === teachers.length}
+                        onCheckedChange={toggleAllSelection}
+                        aria-label="Select all"
+                        className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-slate-900"
+                      />
+                    </TableHead>
                     <TableHead className="text-white font-semibold">Name</TableHead>
                     <TableHead className="text-white font-semibold hidden sm:table-cell">Email</TableHead>
                     <TableHead className="text-white font-semibold hidden md:table-cell">Phone</TableHead>
@@ -108,6 +224,13 @@ export function TeachersContent() {
                     <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No teachers found</TableCell></TableRow>
                   ) : teachers.map(t => (
                     <TableRow key={t.id} className="hover:bg-muted/50">
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={selectedIds.has(t.id)}
+                          onCheckedChange={() => toggleSelection(t.id)}
+                          aria-label={`Select ${t.name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{t.name}</TableCell>
                       <TableCell className="hidden sm:table-cell">{t.email}</TableCell>
                       <TableCell className="hidden md:table-cell">{t.phone}</TableCell>
@@ -118,6 +241,10 @@ export function TeachersContent() {
                           <Button size="sm" variant="outline" className="h-8 w-8 p-0"
                             onClick={() => { setSelected(t); setViewOpen(true) }}>
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-8 w-8 p-0"
+                            onClick={() => { setPasswordForm({ id: t.id, password: "" }); setPasswordOpen(true) }}>
+                            <Key className="h-4 w-4 text-blue-500" />
                           </Button>
                           <Button size="sm" variant="destructive" className="h-8 w-8 p-0"
                             onClick={() => handleDelete(t.id)}>
@@ -168,6 +295,109 @@ export function TeachersContent() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Teacher</DialogTitle></DialogHeader>
+          <form onSubmit={handleAdd} className="space-y-4 mt-4">
+            <div className="space-y-2"><Label>Name *</Label><Input required value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Phone</Label><Input value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Institute</Label><Input value={addForm.institute} onChange={e => setAddForm({...addForm, institute: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Location</Label><Input value={addForm.location} onChange={e => setAddForm({...addForm, location: e.target.value})} /></div>
+            <Button type="submit" className="w-full">Save Teacher</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Set Password</DialogTitle></DialogHeader>
+          <form onSubmit={handleSetPassword} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>New Password *</Label>
+              <Input required type="password" value={passwordForm.password} onChange={e => setPasswordForm({...passwordForm, password: e.target.value})} />
+            </div>
+            <Button type="submit" className="w-full">Update Password</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Modal */}
+      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Custom Export</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Select the columns you want to include in the export.
+              {selectedIds.size > 0 
+                ? ` You are exporting ${selectedIds.size} selected teacher(s).` 
+                : ' You are exporting all teachers.'}
+            </p>
+            <div className="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto p-1 mb-6 border-b pb-4">
+              {[
+                "ID", "Name", "Email", "Phone", "Institute", "Location", "Subjects"
+              ].map(col => (
+                <div key={col} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`col-${col}`}
+                    checked={selectedExportColumns.has(col)}
+                    onCheckedChange={(checked) => {
+                      setSelectedExportColumns(prev => {
+                        const next = new Set(prev)
+                        if (checked) next.add(col)
+                        else next.delete(col)
+                        return next
+                      })
+                    }}
+                  />
+                  <label 
+                    htmlFor={`col-${col}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {col}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold">Additional Data</h4>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="inc-attendance"
+                    checked={includeMonthlyAttendance}
+                    onCheckedChange={(c) => setIncludeMonthlyAttendance(!!c)}
+                  />
+                  <label htmlFor="inc-attendance" className="text-sm font-medium">
+                    Include Monthly Attendance
+                  </label>
+                </div>
+                {includeMonthlyAttendance && (
+                  <div className="pl-6">
+                    <Input 
+                      type="month" 
+                      value={attendanceMonth} 
+                      onChange={e => setAttendanceMonth(e.target.value)}
+                      className="w-48 h-8 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportModalOpen(false)}>Cancel</Button>
+            <Button onClick={confirmExportExcel} disabled={selectedExportColumns.size === 0 || isExporting}>
+              {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              {isExporting ? "Generating..." : "Download Excel"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

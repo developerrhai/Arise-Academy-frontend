@@ -160,6 +160,38 @@ export function AttendanceContent() {
     }
   };
 
+  // Auto-update attendance status
+  const autoUpdateStatus = async (record: AttendanceRecord, newStatus: string) => {
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+      const headers = getHeaders();
+      const res = await fetch(`${apiBase}/attendance/record`, {
+        method: "PUT",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          studentCode: record.student.code,
+          date,
+          status: newStatus,
+          punchIn: record.punchIn || null,
+          punchOut: record.punchOut || null,
+          batchId: record.batch.id,
+          role
+        })
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || "Failed to update attendance.");
+      }
+      toast.success("Attendance updated!");
+      fetchAttendance();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   // Open Edit Modal
   const openEditModal = (record: AttendanceRecord) => {
     setEditingRecord(record);
@@ -273,6 +305,65 @@ export function AttendanceContent() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance Logs");
     XLSX.writeFile(workbook, `attendance_${role.toLowerCase()}_${date}.xlsx`);
     toast.success("Logs exported to Excel successfully!");
+  };
+
+  const handleExportMonthlyExcel = async () => {
+    try {
+      const monthStr = date.substring(0, 7); // YYYY-MM
+      toast.info(`Fetching monthly report for ${monthStr}...`);
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+      const headers = getHeaders();
+      const res = await fetch(`${apiBase}/attendance/monthly-report?month=${monthStr}&role=${role}`, { headers });
+      if (!res.ok) throw new Error("Failed to fetch monthly report");
+      
+      const json = await res.json();
+      if (!json.success || !json.report) throw new Error("Invalid report data");
+      
+      const report = json.report;
+      
+      const allDates = new Set<string>();
+      report.forEach((user: any) => {
+        Object.keys(user.attendance || {}).forEach(d => allDates.add(d));
+      });
+      const sortedDates = Array.from(allDates).sort();
+      
+      const rows = report.map((user: any) => {
+        const row: any = {
+          "Name": user.name,
+          "Contact": user.contact,
+          "Code": user.code,
+        };
+        if (role === "STUDENT") {
+          row["Standard"] = user.standard;
+        }
+        
+        let present = 0, absent = 0, late = 0, onLeave = 0;
+        
+        sortedDates.forEach(d => {
+          const status = user.attendance[d]?.status || "—";
+          row[d] = status;
+          if (status === "Present") present++;
+          else if (status === "Absent") absent++;
+          else if (status === "Late") late++;
+          else if (status === "On Leave") onLeave++;
+        });
+        
+        row["Total Present"] = present;
+        row["Total Absent"] = absent;
+        row["Total Late"] = late;
+        row["Total Leave"] = onLeave;
+        
+        return row;
+      });
+      
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Report");
+      XLSX.writeFile(workbook, `attendance_monthly_${role.toLowerCase()}_${monthStr}.xlsx`);
+      toast.success("Monthly report exported successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export monthly report");
+    }
   };
 
   // Import from Excel mapping helper
@@ -392,7 +483,16 @@ export function AttendanceContent() {
             onClick={handleExportExcel}
             className="border-emerald-500/20 hover:bg-emerald-50 text-emerald-700 rounded-xl font-semibold gap-2"
           >
-            <FileSpreadsheet className="h-4 w-4" /> Export Excel
+            <FileSpreadsheet className="h-4 w-4" /> Daily Excel
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportMonthlyExcel}
+            className="border-indigo-500/20 hover:bg-indigo-50 text-indigo-700 rounded-xl font-semibold gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4" /> Monthly Excel
           </Button>
 
           <Button
@@ -566,21 +666,27 @@ export function AttendanceContent() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block min-w-16 border ${
+                          <select
+                            value={r.status}
+                            onChange={(e) => autoUpdateStatus(r, e.target.value)}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block min-w-16 border cursor-pointer focus:outline-none focus:ring-1 ${
                               r.status === "Present"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-400"
                                 : r.status === "Absent"
-                                ? "bg-red-50 text-red-700 border-red-200"
+                                ? "bg-red-50 text-red-700 border-red-200 focus:ring-red-400"
                                 : r.status === "Late"
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                ? "bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-400"
                                 : r.status === "On Leave"
-                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                                : "bg-orange-50 text-orange-700 border-orange-200"
+                                ? "bg-indigo-50 text-indigo-700 border-indigo-200 focus:ring-indigo-400"
+                                : "bg-orange-50 text-orange-700 border-orange-200 focus:ring-orange-400"
                             }`}
                           >
-                            {r.status}
-                          </span>
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Late">Late</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Half-Day">Half-Day</option>
+                          </select>
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="flex items-center justify-center gap-2">

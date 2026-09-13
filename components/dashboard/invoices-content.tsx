@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Receipt, Plus, Eye, Printer, Trash2, CheckCircle, Clock, AlertCircle, Loader2, Search, X, Edit2, FileSpreadsheet, MessageCircle } from "lucide-react"
 import { invoicesApi, studentsApi } from "@/lib/api"
+import { toast } from "sonner"
 
 interface Invoice {
   id: number
@@ -175,7 +176,8 @@ export function InvoicesContent() {
 
   const handleSave = async () => {
   if (!form.student_name || !form.amount || !form.due_date) {
-    alert("Fill required fields"); return
+    toast.error("Please fill in all required fields (Student Name, Amount, Due Date)"); 
+    return
   }
   setSaving(true)
   try {
@@ -229,8 +231,11 @@ export function InvoicesContent() {
 
     setModalOpen(false)
     setEditing(null)
+    toast.success(editing ? "Invoice updated successfully" : "Invoice created successfully")
     load()
-  } catch (err: any) { alert(err.message) }
+  } catch (err: any) { 
+    toast.error(err.message || "Failed to save invoice") 
+  }
   finally { setSaving(false) }
 }
 
@@ -264,7 +269,7 @@ export function InvoicesContent() {
   }
 
   const handleExportExcel = () => {
-    if (!invoices.length) { alert("No invoices to export"); return }
+    if (!invoices.length) { toast.error("No invoices available to export"); return }
     const headers = [
       "Invoice ID", "Student Name", "Student ID", "Amount", "Paid Amount",
       "Balance", "Paid Date", "Install Date", "Due Date", "Transaction Type", "Status", "Description",
@@ -298,11 +303,17 @@ export function InvoicesContent() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this invoice?")) return
-    try { await invoicesApi.remove(id); load() } catch (err: any) { alert(err.message) }
+    if (!confirm("Are you sure you want to delete this invoice?")) return
+    try { 
+      await invoicesApi.remove(id); 
+      toast.success("Invoice deleted successfully");
+      load() 
+    } catch (err: any) { 
+      toast.error(err.message || "Failed to delete invoice") 
+    }
   }
 
-const handlePrint = async (inv: Invoice) => {
+  const handlePrint = async (inv: Invoice) => {
     let studentPhone = inv.student_phone || ""
     let standard     = inv.standard      || ""
 
@@ -322,11 +333,9 @@ const handlePrint = async (inv: Invoice) => {
       day: "2-digit", month: "2-digit", year: "numeric"
     })
 
-    const w = window.open("", "_blank")
-    if (!w) return
     const balance = Number(inv.amount) - Number(inv.paid_amount)
 
-    w.document.write(`
+    const htmlContent = `
     <html>
     <head>
       <title>Invoice #${inv.id}</title>
@@ -569,9 +578,31 @@ const handlePrint = async (inv: Invoice) => {
       </div>
     </body>
     </html>
-    `)
+    `
+
+    const iframe = document.createElement("iframe")
+    iframe.style.position = "absolute"
+    iframe.style.width = "0"
+    iframe.style.height = "0"
+    iframe.style.border = "none"
+    document.body.appendChild(iframe)
+    
+    const w = iframe.contentWindow
+    if (!w) return
+    
+    w.document.open()
+    w.document.write(htmlContent)
     w.document.close()
-    w.print()
+    
+    // allow time for images/styles to load before print dialog
+    setTimeout(() => {
+      w.focus()
+      w.print()
+      // Cleanup after print dialog closes
+      setTimeout(() => {
+        document.body.removeChild(iframe)
+      }, 2000)
+    }, 500)
   }
 
   //  <img src="${window.location.origin}/sign.png" />

@@ -9,14 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { GraduationCap, Search, Eye, Trash2, Phone, User, MapPin, BookOpen, Loader2, IndianRupee, Pencil, FileSpreadsheet, Upload, Key } from "lucide-react"
-import { studentsApi, studentsUniversalApi } from "@/lib/api"
+import { Checkbox } from "@/components/ui/checkbox"
+import { GraduationCap, Search, Eye, Trash2, Phone, User, MapPin, BookOpen, Loader2, IndianRupee, Pencil, FileSpreadsheet, Upload, Key, UserCheck, UserMinus } from "lucide-react"
+import { studentsApi, studentsUniversalApi, teachersApi, getToken } from "@/lib/api"
 import * as XLSX from "xlsx"
 
 interface Student {
   id: number; name: string; email?: string; phone: string; father_name: string; father_phone: string
   board: string; standard: string; course: string; location: string; fee: number; paid_fee: number
   subjects: string[]; biometric_code?: string;
+  assigned_teacher_id?: number; assigned_teacher_name?: string;
 }
 
 // ── Subject constants ──────────────────────────────────
@@ -76,6 +78,40 @@ export function StudentsContent() {
   const [newBioCode, setNewBioCode] = useState("")
   const [bioSaving, setBioSaving] = useState(false)
 
+  // Assign Teacher modal
+  const [assignTeacherModalOpen, setAssignTeacherModalOpen] = useState(false)
+  const [teacherStudent, setTeacherStudent] = useState<Student | null>(null)
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("")
+  const [assignTeacherSaving, setAssignTeacherSaving] = useState(false)
+  const [allTeachers, setAllTeachers] = useState<any[]>([])
+
+  // Selection & Export State
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [includeMonthlyAttendance, setIncludeMonthlyAttendance] = useState(false)
+  const [attendanceMonth, setAttendanceMonth] = useState<string>(new Date().toISOString().substring(0, 7))
+  const [selectedExportColumns, setSelectedExportColumns] = useState<Set<string>>(
+    new Set(["ID", "Name", "Email", "Phone", "Father Name", "Father Phone", "Board", "Standard", "Course", "Location", "Total Fee", "Paid Fee", "Subjects", "Biometric Code", "Assigned Teacher"])
+  )
+
+  const toggleSelection = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAllSelection = () => {
+    if (selectedIds.size === students.length && students.length > 0) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(students.map(s => s.id)))
+    }
+  }
+
   // ── Load ───────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true)
@@ -95,6 +131,8 @@ export function StudentsContent() {
             ? (Array.isArray(r.subjects) ? r.subjects : String(r.subjects).split(",").filter(Boolean))
             : [],
         })))
+        const tRes: any = await teachersApi.getAll()
+        setAllTeachers(tRes?.data || [])
       } catch {
         const primary: any = await studentsApi.getAll(filters)
         const rows = primary?.data || []
@@ -104,15 +142,49 @@ export function StudentsContent() {
             ? (Array.isArray(r.subjects) ? r.subjects : String(r.subjects).split(",").filter(Boolean))
             : [],
         })))
+        const tRes: any = await teachersApi.getAll()
+      } catch (err) {
+        console.error("Failed to load students", err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
   }, [filterStandard, filterBoard, filterLocation, searchTerm])
 
   useEffect(() => { load() }, [load])
+
+  // Clear selections when students list changes
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [students])
+
+  // ── Assign Teacher ─────────────────────────────────────
+  const openAssignTeacherModal = (s: Student) => {
+    setTeacherStudent(s)
+    setSelectedTeacherId(s.assigned_teacher_id ? String(s.assigned_teacher_id) : "")
+    setAssignTeacherModalOpen(true)
+  }
+
+  const handleAssignTeacher = async () => {
+    if (!teacherStudent) return
+    setAssignTeacherSaving(true)
+    try {
+      const assignedId = selectedTeacherId ? Number(selectedTeacherId) : null
+      const teacherName = allTeachers.find(t => String(t.id) === selectedTeacherId)?.name || null
+      await studentsApi.update(teacherStudent.id, { 
+        ...teacherStudent, 
+        assigned_teacher_id: assignedId,
+        subjects: teacherStudent.subjects.join(",")
+      })
+      
+      setStudents(prev => prev.map(s => 
+        s.id === teacherStudent.id 
+          ? { ...s, assigned_teacher_id: assignedId ?? undefined, assigned_teacher_name: teacherName ?? undefined } 
+          : s
+      ))
+      setAssignTeacherModalOpen(false)
+    } catch (err: any) { alert(err.message) }
+    finally { setAssignTeacherSaving(false) }
+  }
 
   // ── Delete ─────────────────────────────────────────────
   const handleDelete = async (id: number) => {
@@ -354,6 +426,97 @@ export function StudentsContent() {
     event.target.value = ""
   }
 }
+
+  const handleExportExcel = () => {
+    setExportModalOpen(true)
+  }
+
+  const confirmExportExcel = async () => {
+    const listToExport = selectedIds.size > 0 
+      ? students.filter(s => selectedIds.has(s.id))
+      : students
+      
+    if (listToExport.length === 0) {
+      alert("No students to export.")
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      let attendanceData: Record<number, any> = {}
+      let sortedDates: string[] = []
+
+      if (includeMonthlyAttendance) {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api"
+        const res = await fetch(`${apiBase}/attendance/monthly-report?month=${attendanceMonth}&role=STUDENT`, {
+          headers: { "Authorization": `Bearer ${getToken()}` }
+        })
+        
+        if (res.ok) {
+          const json = await res.json()
+          if (json.success && json.report) {
+            const allDates = new Set<string>()
+            json.report.forEach((u: any) => {
+              attendanceData[u.id] = u.attendance || {}
+              Object.keys(u.attendance || {}).forEach(d => allDates.add(d))
+            })
+            sortedDates = Array.from(allDates).sort()
+          }
+        } else {
+          console.error("Failed to fetch monthly attendance for export")
+        }
+      }
+
+      const data = listToExport.map(s => {
+        const row: any = {}
+        if (selectedExportColumns.has("ID")) row["ID"] = s.id
+        if (selectedExportColumns.has("Name")) row["Name"] = s.name
+        if (selectedExportColumns.has("Email")) row["Email"] = s.email || ""
+        if (selectedExportColumns.has("Phone")) row["Phone"] = s.phone
+        if (selectedExportColumns.has("Father Name")) row["Father Name"] = s.father_name
+        if (selectedExportColumns.has("Father Phone")) row["Father Phone"] = s.father_phone
+        if (selectedExportColumns.has("Board")) row["Board"] = s.board
+        if (selectedExportColumns.has("Standard")) row["Standard"] = s.standard
+        if (selectedExportColumns.has("Course")) row["Course"] = s.course
+        if (selectedExportColumns.has("Location")) row["Location"] = s.location
+        if (selectedExportColumns.has("Total Fee")) row["Total Fee"] = s.fee
+        if (selectedExportColumns.has("Paid Fee")) row["Paid Fee"] = s.paid_fee
+        if (selectedExportColumns.has("Subjects")) row["Subjects"] = s.subjects?.join(", ") || ""
+        if (selectedExportColumns.has("Biometric Code")) row["Biometric Code"] = s.biometric_code || ""
+        if (selectedExportColumns.has("Assigned Teacher")) row["Assigned Teacher"] = s.assigned_teacher_name || ""
+        
+        if (includeMonthlyAttendance) {
+          let present = 0, absent = 0, late = 0, onLeave = 0
+          sortedDates.forEach(d => {
+            const status = attendanceData[s.id]?.[d]?.status || "—"
+            row[d] = status
+            if (status === "Present") present++
+            else if (status === "Absent") absent++
+            else if (status === "Late") late++
+            else if (status === "On Leave") onLeave++
+          })
+          row["Total Present"] = present
+          row["Total Absent"] = absent
+          row["Total Late"] = late
+          row["Total Leave"] = onLeave
+        }
+
+        return row
+      })
+
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Students")
+      XLSX.writeFile(workbook, `Students_Export_${new Date().getTime()}.xlsx`)
+      setExportModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert("An error occurred during export.")
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   // ── Subject toggle (used in view modal edit — inline state) ──
   // We keep a local edit state only for subjects inside the view modal
   const [editSubjects,    setEditSubjects]    = useState<string[]>([])
@@ -462,7 +625,8 @@ export function StudentsContent() {
                 Import Excel
               </Button>
               <Button onClick={handleExportExcel} variant="outline">
-                <FileSpreadsheet className="h-4 w-4 mr-2" /> Export Excel
+                <FileSpreadsheet className="h-4 w-4 mr-2" /> 
+                {selectedIds.size > 0 ? `Export Selected (${selectedIds.size})` : 'Export All'}
               </Button>
             </div>
           </div>
@@ -477,6 +641,14 @@ export function StudentsContent() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-900">
+                    <TableHead className="w-12 text-center">
+                      <Checkbox 
+                        checked={students.length > 0 && selectedIds.size === students.length}
+                        onCheckedChange={toggleAllSelection}
+                        aria-label="Select all"
+                        className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-slate-900"
+                      />
+                    </TableHead>
                     <TableHead className="text-white font-semibold w-12 text-center">Sr.</TableHead>
                     <TableHead className="text-white font-semibold">Name</TableHead>
                     <TableHead className="text-white font-semibold hidden sm:table-cell">Phone</TableHead>
@@ -502,6 +674,13 @@ export function StudentsContent() {
                     const { label, cls } = feeStatus(s)
                     return (
                       <TableRow key={s.id} className="hover:bg-muted/50">
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            checked={selectedIds.has(s.id)}
+                            onCheckedChange={() => toggleSelection(s.id)}
+                            aria-label={`Select ${s.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="text-center text-muted-foreground text-sm font-medium">
                           {index + 1}
                         </TableCell>
@@ -576,6 +755,12 @@ export function StudentsContent() {
                               onClick={() => openBioModal(s)}>
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
                             </Button>
+                            <Button size="sm" variant="outline"
+                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:border-orange-300"
+                              title="Assign Teacher"
+                              onClick={() => openAssignTeacherModal(s)}>
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="destructive" className="h-8 w-8 p-0"
                               onClick={() => handleDelete(s.id)}>
                               <Trash2 className="h-4 w-4" />
@@ -609,6 +794,7 @@ export function StudentsContent() {
                 { icon: Phone,    label: "Father Phone",     value: selected.father_phone },
                 { icon: BookOpen, label: "Board / Standard", value: `${selected.board} – ${selected.standard}th` },
                 { icon: MapPin,   label: "Location",         value: selected.location },
+                { icon: UserCheck,label: "Assigned Teacher", value: selected.assigned_teacher_name || "Unassigned" },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                   <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -1051,6 +1237,140 @@ export function StudentsContent() {
               <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>Close</Button>
             </DialogFooter>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Assign Teacher Modal ───────────────────────────── */}
+      <Dialog open={assignTeacherModalOpen} onOpenChange={setAssignTeacherModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-orange-600" /> Assign Teacher
+            </DialogTitle>
+          </DialogHeader>
+          
+          {teacherStudent && (
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold shrink-0">
+                  {teacherStudent.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{teacherStudent.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {teacherStudent.standard && `Std ${teacherStudent.standard}`}
+                    {teacherStudent.course && ` · ${teacherStudent.course}`}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="teacher-select">Select Teacher</Label>
+                <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
+                  <SelectTrigger id="teacher-select" className="w-full">
+                    <SelectValue placeholder="Select a teacher or Unassign" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">-- Unassigned --</SelectItem>
+                    {allTeachers.map(t => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.name} {t.subjects ? `(${t.subjects})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground px-1">
+                  Assigning a teacher allows them to directly view this student in their dashboard and manage them. Select <strong>-- Unassigned --</strong> to remove any assigned teacher.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignTeacherModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleAssignTeacher} disabled={assignTeacherSaving} className="bg-orange-600 hover:bg-orange-700 text-white">
+              {assignTeacherSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Assignment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Modal */}
+      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Custom Export</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Select the columns you want to include in the export.
+              {selectedIds.size > 0 
+                ? ` You are exporting ${selectedIds.size} selected student(s).` 
+                : ' You are exporting all students.'}
+            </p>
+            <div className="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto p-1 mb-6 border-b pb-4">
+              {[
+                "ID", "Name", "Email", "Phone", "Father Name", "Father Phone",
+                "Board", "Standard", "Course", "Location", "Total Fee", "Paid Fee",
+                "Subjects", "Biometric Code", "Assigned Teacher"
+              ].map(col => (
+                <div key={col} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`col-${col}`}
+                    checked={selectedExportColumns.has(col)}
+                    onCheckedChange={(checked) => {
+                      setSelectedExportColumns(prev => {
+                        const next = new Set(prev)
+                        if (checked) next.add(col)
+                        else next.delete(col)
+                        return next
+                      })
+                    }}
+                  />
+                  <label 
+                    htmlFor={`col-${col}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {col}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold">Additional Data</h4>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="inc-attendance"
+                    checked={includeMonthlyAttendance}
+                    onCheckedChange={(c) => setIncludeMonthlyAttendance(!!c)}
+                  />
+                  <label htmlFor="inc-attendance" className="text-sm font-medium">
+                    Include Monthly Attendance
+                  </label>
+                </div>
+                {includeMonthlyAttendance && (
+                  <div className="pl-6">
+                    <Input 
+                      type="month" 
+                      value={attendanceMonth} 
+                      onChange={e => setAttendanceMonth(e.target.value)}
+                      className="w-48 h-8 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportModalOpen(false)}>Cancel</Button>
+            <Button onClick={confirmExportExcel} disabled={selectedExportColumns.size === 0 || isExporting}>
+              {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              {isExporting ? "Generating..." : "Download Excel"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
