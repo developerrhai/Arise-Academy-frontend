@@ -41,4 +41,4 @@ arise-*.json
 *-firebase-adminsdk-*.json
 backend-deploy.tar.gz
 backend.tar.gz  
- 
+ *-firebase-adminsdk-*
