@@ -490,9 +490,6 @@ export function InvoicesContent() {
         <div class="top-section">
           <div class="bill-to">
             <h3>Bill To</h3>
-            <p style="font-size:11px; color:#000; font-weight: 500;">Address : 6th floor, Aishwarya Deer stone, Akurdi - 411044</p>
-            <p style="font-size:11px; color:#000; font-weight: 500;">Institute Contact : 9923349044</p>
-            <p style="font-size:11px; color:#000;">Branches : Akurdi | Bijaliinagar | Walhekarwadi</p>
             <p><b>${inv.student_name}</b></p>
             <p>Contact No. &nbsp;: ${studentPhone || "-"}</p>
             <p>Student ID &nbsp;&nbsp;: ${inv.student_id || "-"}</p>
@@ -549,16 +546,7 @@ export function InvoicesContent() {
 
           <div class="or-divider">—<br/>OR<br/>—</div>
 
-          <!-- ✅ UPDATED: Bank details for ARISE ACADEMY PRIVATE LIMITED -->
-          <div class="bank-details">
-            <p class="bank-title">Bank Transfer Details</p>
-            <p>Bank Name &nbsp;&nbsp;&nbsp;&nbsp;: AU SMALL FINANCE BANK</p>
-            <p>Account Name &nbsp;: ARISE ACADEMY PRIVATE LIMITED</p>
-            <p>Account No. &nbsp;&nbsp;: 2602421712535347</p>
-            <p>Account Type &nbsp;: CURRENT</p>
-            <p>RTGS/NEFT IFSC : AUBL0004217</p>
-          </div>
-
+          <!-- Bank details removed as per request -->
           <div class="signature">
             <p>For : ARISE ACADEMY PRIVATE LIMITED</p>
             <div class="sig-line">
