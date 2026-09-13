@@ -84,14 +84,42 @@ export function TeachersContent() {
 
   const [passwordOpen, setPasswordOpen] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ id: 0, password: "" })
+  const [currentPlainPassword, setCurrentPlainPassword] = useState<string | null>(null)
+  const [fetchingPassword, setFetchingPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
+  const openPasswordModal = async (teacher: Teacher) => {
+    setPasswordForm({ id: teacher.id, password: "" })
+    setCurrentPlainPassword(null)
+    setShowPassword(false)
+    setPasswordOpen(true)
+    setFetchingPassword(true)
+
+    try {
+      const data = await teachersApi.getPassword(teacher.id)
+      if (data.success && data.plainTextPassword) {
+        setCurrentPlainPassword(data.plainTextPassword)
+      } else {
+        setCurrentPlainPassword("Unencrypted or Not set")
+      }
+    } catch (err) {
+      setCurrentPlainPassword("Error fetching password")
+    } finally {
+      setFetchingPassword(false)
+    }
+  }
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (passwordForm.password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
     try {
       await teachersApi.setPassword(passwordForm.id, { password: passwordForm.password })
       setPasswordOpen(false)
       setPasswordForm({ id: 0, password: "" })
-      alert("Password set successfully!")
+      alert("Password updated successfully!")
     } catch (err: any) { alert(err.message) }
   }
 
@@ -243,7 +271,7 @@ export function TeachersContent() {
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" className="h-8 w-8 p-0"
-                            onClick={() => { setPasswordForm({ id: t.id, password: "" }); setPasswordOpen(true) }}>
+                            onClick={() => openPasswordModal(t)}>
                             <Key className="h-4 w-4 text-blue-500" />
                           </Button>
                           <Button size="sm" variant="destructive" className="h-8 w-8 p-0"
@@ -314,11 +342,42 @@ export function TeachersContent() {
 
       <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Set Password</DialogTitle></DialogHeader>
-          <form onSubmit={handleSetPassword} className="space-y-4 mt-4">
+          <DialogHeader><DialogTitle>Manage Password</DialogTitle></DialogHeader>
+          
+          <div className="bg-muted p-4 rounded-lg flex flex-col gap-2 mt-4 relative">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Current Password</Label>
+            {fetchingPassword ? (
+              <div className="flex items-center gap-2 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                Fetching...
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="font-mono text-base font-medium">
+                  {showPassword ? currentPlainPassword : "••••••••"}
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSetPassword} className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label>New Password *</Label>
-              <Input required type="password" value={passwordForm.password} onChange={e => setPasswordForm({...passwordForm, password: e.target.value})} />
+              <Label>Set New Password</Label>
+              <Input 
+                required 
+                type="password" 
+                placeholder="Enter new password (min 6 chars)"
+                value={passwordForm.password} 
+                onChange={e => setPasswordForm({...passwordForm, password: e.target.value})} 
+              />
             </div>
             <Button type="submit" className="w-full">Update Password</Button>
           </form>
