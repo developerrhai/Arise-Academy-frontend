@@ -112,6 +112,34 @@ export function StudentsContent() {
     }
   }
 
+  // Edit Student modal
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
+  const [editStudentForm, setEditStudentForm] = useState<any>(null)
+  const [editStudentSaving, setEditStudentSaving] = useState(false)
+
+  const openEditStudent = (s: Student) => {
+    setEditStudentForm({ ...s })
+    setEditStudentOpen(true)
+  }
+
+  const handleEditStudent = async () => {
+    if (!editStudentForm) return
+    setEditStudentSaving(true)
+    try {
+      const payload = {
+        ...editStudentForm,
+        subjects: Array.isArray(editStudentForm.subjects) ? editStudentForm.subjects.join(",") : editStudentForm.subjects
+      }
+      await studentsApi.update(editStudentForm.id, payload)
+      setStudents(prev => prev.map(s => s.id === editStudentForm.id ? {
+        ...editStudentForm, 
+        subjects: Array.isArray(editStudentForm.subjects) ? editStudentForm.subjects : String(editStudentForm.subjects).split(",").filter(Boolean)
+      } : s))
+      setEditStudentOpen(false)
+    } catch (err: any) { alert(err.message) }
+    finally { setEditStudentSaving(false) }
+  }
+
   // ── Load ───────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true)
@@ -143,8 +171,10 @@ export function StudentsContent() {
             : [],
         })))
         const tRes: any = await teachersApi.getAll()
-      } catch (err) {
-        console.error("Failed to load students", err)
+        setAllTeachers(tRes?.data || [])
+      }
+    } catch (err) {
+      console.error("Failed to load students", err)
       } finally {
         setLoading(false)
       }
@@ -297,30 +327,6 @@ export function StudentsContent() {
       alert("Bio Code updated successfully!")
     } catch (err: any) { alert(err.message) }
     finally { setBioSaving(false) }
-  }
-
-  // ── Export ─────────────────────────────────────────────
-  const handleExportExcel = () => {
-    if (!students.length) { alert("No students to export"); return }
-    const headers = ["ID","Name","Phone","Father Name","Father Phone","Board","Standard",
-      "Course","Location","Subjects","Total Fee","Paid Fee","Balance","Fee Status"]
-    const rows = students.map(s => {
-      const totalFee = Number(s.fee || 0)
-      const paidFee  = Number(s.paid_fee || 0)
-      return [
-        s.id, s.name, s.phone, s.father_name, s.father_phone,
-        s.board, s.standard, s.course, s.location,
-        s.subjects?.join(", ") || "",
-        totalFee, paidFee, Math.max(totalFee - paidFee, 0), feeStatus(s).label,
-      ]
-    })
-    const esc = (v: string | number) => `"${String(v).replace(/"/g, "\"\"")}"`
-    const csv  = [headers, ...rows].map(r => r.map(esc).join(",")).join("\n")
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement("a")
-    a.href = url; a.download = `students_${new Date().toISOString().slice(0,10)}.csv`
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
   }
 
   // ── Import ─────────────────────────────────────────────
@@ -725,6 +731,11 @@ export function StudentsContent() {
                               onClick={() => { setSelected(s); setViewOpen(true) }}>
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:border-blue-300"
+                              title="Edit Details"
+                              onClick={() => openEditStudent(s)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="outline"
                               className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:border-green-300"
                               title="Edit subjects"
@@ -860,6 +871,90 @@ export function StudentsContent() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit Student Details Modal ──────────────────────── */}
+      <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-blue-600" /> Edit Student Details
+            </DialogTitle>
+          </DialogHeader>
+          {editStudentForm && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input value={editStudentForm.name || ""} onChange={e => setEditStudentForm({...editStudentForm, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={editStudentForm.email || ""} onChange={e => setEditStudentForm({...editStudentForm, email: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input value={editStudentForm.phone || ""} onChange={e => setEditStudentForm({...editStudentForm, phone: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Father Name</Label>
+                <Input value={editStudentForm.father_name || ""} onChange={e => setEditStudentForm({...editStudentForm, father_name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Father Phone</Label>
+                <Input value={editStudentForm.father_phone || ""} onChange={e => setEditStudentForm({...editStudentForm, father_phone: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Board</Label>
+                <Select value={editStudentForm.board || ""} onValueChange={v => setEditStudentForm({...editStudentForm, board: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select Board" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="State">State Board</SelectItem>
+                    <SelectItem value="CBSE">CBSE</SelectItem>
+                    <SelectItem value="ICSE">ICSE</SelectItem>
+                    <SelectItem value="IB">IB</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Standard</Label>
+                <Select value={editStudentForm.standard || ""} onValueChange={v => setEditStudentForm({...editStudentForm, standard: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select Standard" /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i+1} value={String(i+1)}>{i+1}th Standard</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Course / Batch</Label>
+                <Input value={editStudentForm.course || ""} onChange={e => setEditStudentForm({...editStudentForm, course: e.target.value})} placeholder="e.g. Science Batch A" />
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Select value={editStudentForm.location || ""} onValueChange={v => setEditStudentForm({...editStudentForm, location: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select Location" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Akurdi">Akurdi</SelectItem>
+                    <SelectItem value="Bijaliinagar">Bijaliinagar</SelectItem>
+                    <SelectItem value="Walhekarwadi">Walhekarwadi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Institute</Label>
+                <Input value={editStudentForm.institute || ""} onChange={e => setEditStudentForm({...editStudentForm, institute: e.target.value})} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditStudentOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditStudent} disabled={editStudentSaving} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {editStudentSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1286,8 +1381,33 @@ export function StudentsContent() {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setAssignTeacherModalOpen(false)}>Cancel</Button>
+            {teacherStudent?.assigned_teacher_id && (
+              <Button 
+                variant="destructive"
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to remove the assigned teacher?")) return;
+                  setAssignTeacherSaving(true);
+                  try {
+                    await studentsApi.update(teacherStudent.id, { 
+                      ...teacherStudent, 
+                      assigned_teacher_id: null,
+                      subjects: teacherStudent.subjects.join(",")
+                    });
+                    setStudents(prev => prev.map(s => 
+                      s.id === teacherStudent.id 
+                        ? { ...s, assigned_teacher_id: undefined, assigned_teacher_name: undefined } 
+                        : s
+                    ));
+                    setAssignTeacherModalOpen(false);
+                  } catch (err: any) { alert(err.message); }
+                  finally { setAssignTeacherSaving(false); }
+                }}
+              >
+                Remove Teacher
+              </Button>
+            )}
             <Button onClick={handleAssignTeacher} disabled={assignTeacherSaving} className="bg-orange-600 hover:bg-orange-700 text-white">
               {assignTeacherSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Save Assignment

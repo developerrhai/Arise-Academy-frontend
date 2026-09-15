@@ -37,7 +37,6 @@ export default function HomeworkPage() {
   const [newHw, setNewHw] = useState({
     chapter: "", topic: "", subject: "", branch: "", board: "", standard: "", dueDate: "", description: "", attachmentUrl: ""
   });
-  });
   const [saving, setSaving] = useState(false);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
 

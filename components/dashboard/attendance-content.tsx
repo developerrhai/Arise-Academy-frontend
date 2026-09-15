@@ -63,6 +63,35 @@ export function AttendanceContent() {
   const [notifying, setNotifying] = useState(false);
   const [isConfigured, setIsConfigured] = useState(true);
 
+  // Custom Export Modal State
+  const [isCustomExportOpen, setIsCustomExportOpen] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [customEndDate, setCustomEndDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [customRole, setCustomRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+  const [customUsersList, setCustomUsersList] = useState<any[]>([]);
+  const [customSelectedUserIds, setCustomSelectedUserIds] = useState<Set<number>>(new Set());
+  const [customExporting, setCustomExporting] = useState(false);
+
+  const fetchCustomUsers = useCallback(async (role: string) => {
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+      const headers = getHeaders();
+      const endpoint = role === "STUDENT" ? "/students" : "/teachers";
+      const res = await fetch(`${apiBase}${endpoint}`, { headers });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const json = await res.json();
+      setCustomUsersList(json.data || json || []);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to fetch users for export");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isCustomExportOpen) {
+      fetchCustomUsers(customRole);
+    }
+  }, [isCustomExportOpen, customRole, fetchCustomUsers]);
+
   const getHeaders = (): Record<string, string> => {
     const token = getToken();
     return token ? { "Authorization": `Bearer ${token}` } : {};
@@ -254,13 +283,13 @@ export function AttendanceContent() {
     }
   };
 
-  // WhatsApp broadcast
-  const handleNotifyWhatsApp = async () => {
+  // Send Notifications Broadcast
+  const handleSendNotifications = async () => {
     setNotifying(true);
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
       const headers = getHeaders();
-      const res = await fetch(`${apiBase}/attendance/notify-whatsapp`, {
+      const res = await fetch(`${apiBase}/attendance/notify-all`, {
         method: "POST",
         headers: {
           ...headers,
@@ -272,7 +301,7 @@ export function AttendanceContent() {
       if (!res.ok) throw new Error("Failed to trigger notifications.");
 
       const json = await res.json();
-      toast.success(json.message || "WhatsApp notification loop triggered!");
+      toast.success(json.message || "Notification loop triggered!");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -363,6 +392,80 @@ export function AttendanceContent() {
       toast.success("Monthly report exported successfully!");
     } catch (err: any) {
       toast.error(err.message || "Failed to export monthly report");
+    }
+  };
+
+  const handleExportCustomReport = async () => {
+    if (!customStartDate || !customEndDate) {
+      toast.error("Start Date and End Date are required");
+      return;
+    }
+    
+    setCustomExporting(true);
+    try {
+      toast.info(`Fetching custom report...`);
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://institute-api.rhaitech.online/api";
+      const headers = getHeaders();
+      
+      let url = `${apiBase}/attendance/custom-report?startDate=${customStartDate}&endDate=${customEndDate}&role=${customRole}`;
+      if (customSelectedUserIds.size > 0) {
+        url += `&userIds=${Array.from(customSelectedUserIds).join(",")}`;
+      }
+      
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error("Failed to fetch custom report");
+      
+      const json = await res.json();
+      if (!json.success || !json.report) throw new Error("Invalid report data");
+      
+      const report = json.report;
+      
+      // Determine all dates present in the response
+      const allDates = new Set<string>();
+      report.forEach((user: any) => {
+        Object.keys(user.attendance || {}).forEach(d => allDates.add(d));
+      });
+      const sortedDates = Array.from(allDates).sort();
+      
+      const rows = report.map((user: any) => {
+        const row: any = {
+          "Name": user.name,
+          "Contact": user.contact,
+          "Code": user.code,
+        };
+        if (customRole === "STUDENT") {
+          row["Standard"] = user.standard;
+        }
+        
+        let present = 0, absent = 0, late = 0, onLeave = 0;
+        
+        sortedDates.forEach(d => {
+          const status = user.attendance[d]?.status || "—";
+          row[d] = status;
+          if (status === "Present") present++;
+          else if (status === "Absent") absent++;
+          else if (status === "Late") late++;
+          else if (status === "On Leave") onLeave++;
+        });
+        
+        row["Total Present"] = present;
+        row["Total Absent"] = absent;
+        row["Total Late"] = late;
+        row["Total Leave"] = onLeave;
+        
+        return row;
+      });
+      
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Custom Report");
+      XLSX.writeFile(workbook, `attendance_custom_${customRole.toLowerCase()}_${customStartDate}_to_${customEndDate}.xlsx`);
+      toast.success("Custom report exported successfully!");
+      setIsCustomExportOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export custom report");
+    } finally {
+      setCustomExporting(false);
     }
   };
 
@@ -498,11 +601,23 @@ export function AttendanceContent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleNotifyWhatsApp}
+            onClick={() => {
+              setCustomSelectedUserIds(new Set());
+              setIsCustomExportOpen(true);
+            }}
+            className="border-blue-500/20 hover:bg-blue-50 text-blue-700 rounded-xl font-semibold gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4" /> Custom Export
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSendNotifications}
             disabled={records.length === 0 || notifying}
             className="border-green-500/20 hover:bg-green-50 text-green-700 rounded-xl font-semibold gap-2"
           >
-            <MessageSquare className="h-4 w-4" /> Notify Absent
+            <MessageSquare className="h-4 w-4" /> Send Notifications
           </Button>
         </div>
       </div>
@@ -796,6 +911,117 @@ export function AttendanceContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    <Dialog open={isCustomExportOpen} onOpenChange={setIsCustomExportOpen}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Custom Attendance Export</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="flex items-center gap-4">
+            <div className="space-y-1.5 flex-1">
+              <Label>From Date</Label>
+              <Input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <Label>To Date</Label>
+              <Input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Role</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={customRole === "STUDENT" ? "default" : "outline"}
+                onClick={() => {
+                  setCustomRole("STUDENT");
+                  setCustomSelectedUserIds(new Set());
+                }}
+                className="flex-1"
+              >
+                Students
+              </Button>
+              <Button
+                variant={customRole === "TEACHER" ? "default" : "outline"}
+                onClick={() => {
+                  setCustomRole("TEACHER");
+                  setCustomSelectedUserIds(new Set());
+                }}
+                className="flex-1"
+              >
+                Teachers
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 border rounded-lg p-3">
+            <div className="flex justify-between items-center mb-2">
+              <Label>Select Specific Users</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs text-primary"
+                onClick={() => {
+                  if (customSelectedUserIds.size === customUsersList.length) {
+                    setCustomSelectedUserIds(new Set());
+                  } else {
+                    setCustomSelectedUserIds(new Set(customUsersList.map(u => u.id)));
+                  }
+                }}
+              >
+                {customSelectedUserIds.size === customUsersList.length && customUsersList.length > 0 ? "Deselect All" : "Select All"}
+              </Button>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto space-y-2 border-t pt-2">
+              {customUsersList.map((user) => (
+                <div key={user.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`user-${user.id}`}
+                    checked={customSelectedUserIds.has(user.id)}
+                    onChange={(e) => {
+                      const newSet = new Set(customSelectedUserIds);
+                      if (e.target.checked) newSet.add(user.id);
+                      else newSet.delete(user.id);
+                      setCustomSelectedUserIds(newSet);
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor={`user-${user.id}`} className="font-normal cursor-pointer text-sm">
+                    {user.name} {user.code ? `(${user.code})` : ""}
+                  </Label>
+                </div>
+              ))}
+              {customUsersList.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-2">No users found.</p>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {customSelectedUserIds.size === 0 
+                ? "No specific users selected. Will export ALL users." 
+                : `${customSelectedUserIds.size} user(s) selected.`}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsCustomExportOpen(false)}>Cancel</Button>
+          <Button onClick={handleExportCustomReport} disabled={customExporting} className="bg-primary hover:bg-primary/95 text-white gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            {customExporting ? "Exporting..." : "Export Custom Report"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }

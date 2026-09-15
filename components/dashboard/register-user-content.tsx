@@ -14,7 +14,7 @@ export function RegisterUserContent() {
     name:"", email:"", phone:"", role:"",
     standard:"", board:"", institute:"", location:"",
     father_name:"", father_phone:"", course:"", subjects:"",
-    department:"", designation:"",
+    department:"", designation:"", password:"",
     fees: "10000"   // ✅ default fees
   })
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -65,6 +65,7 @@ export function RegisterUserContent() {
           phone: formData.phone,
           institute: formData.institute,
           location: formData.location,
+          password: formData.password,
           subjects: formData.subjects
             ? formData.subjects.split(",").map(s => s.trim())
             : [],
@@ -88,7 +89,7 @@ export function RegisterUserContent() {
         name:"", email:"", phone:"", role:"",
         standard:"", board:"", institute:"", location:"",
         father_name:"", father_phone:"", course:"", subjects:"",
-        department:"", designation:"",
+        department:"", designation:"", password:"",
         fees: "10000"
       })
 
@@ -143,6 +144,14 @@ export function RegisterUserContent() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Password Field (for Teacher/Student/Staff if needed, but primarily Teacher as requested) */}
+            {(formData.role === "teacher" || formData.role === "student" || formData.role === "staff") && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">Password (Optional)</Label>
+                <Input type="password" value={formData.password || ""} onChange={e => set("password", e.target.value)} placeholder="Enter password" />
+              </div>
+            )}
 
             {/* Staff-specific fields */}
             {formData.role === "staff" && (

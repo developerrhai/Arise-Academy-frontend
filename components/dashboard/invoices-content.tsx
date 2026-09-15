@@ -362,10 +362,11 @@ export function InvoicesContent() {
         /* ── Header ── */
         .header {
           border-bottom: 3px solid #0b7db7;
-          padding-bottom: 5px;
+          padding-bottom: 10px;
           flex-shrink: 0;
+          text-align: center;
         }
-        .logo { width: 100%; height: 270px; object-fit: cover; display: block; }
+        .logo { width: auto; max-width: 100%; height: auto; max-height: 140px; object-fit: contain; display: inline-block; }
 
         /* ── Title ── */
         .title {
@@ -435,34 +436,18 @@ export function InvoicesContent() {
           gap: 8px;
         }
 
-        .payment { display: flex; flex-direction: column; align-items: center; width: 28%; }
-        .payment p { font-size: 10px; margin-bottom: 5px; font-weight: bold; text-align: center; }
-        .payment img { width: 110px; height: 110px; }
-
-        .or-divider {
-          font-size: 14px;
-          font-weight: bold;
-          color: #888;
-          text-align: center;
-          width: 8%;
-        }
-
-        .bank-details { width: 30%; }
-        .bank-details p { margin: 4px 0; font-size: 10.5px; }
-        .bank-details .bank-title { font-weight: bold; font-size: 11px; color: #0b7db7; margin-bottom: 6px; }
-
         .signature {
-          width: 28%;
-          text-align: center;
+          width: 100%;
+          text-align: right;
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: flex-end;
           justify-content: flex-end;
         }
         .signature p { font-size: 10px; margin-bottom: 4px; }
         .signature img { width: 110px; }
         .auth { font-weight: bold; font-size: 11px; margin-top: 4px; }
-        .sig-line { width: 100%; border-top: 1px solid #000; margin-top: 6px; padding-top: 4px; }
+        .sig-line { width: 200px; border-top: 1px solid #000; margin-top: 6px; padding-top: 4px; text-align: center; }
 
         /* ── Terms ── */
         .terms {
@@ -480,7 +465,7 @@ export function InvoicesContent() {
 
         <!-- 1. Logo -->
         <div class="header">
-          <img class="logo" src="/logo.jpeg" />
+          <img class="logo" src="/arise-logo.png" />
         </div>
 
         <!-- 2. Title --> 
@@ -537,16 +522,8 @@ export function InvoicesContent() {
           </table>
         </div>
 
-        <!-- 6. QR | OR | Bank | Signature -->
+        <!-- 6. Signature -->
         <div class="payment-signature">
-          <div class="payment">
-            <p>Scan &amp; Pay via UPI</p>
-            <img style="width: 180px;height:180px;" src="/qr.jpeg" />
-          </div>
-
-          <div class="or-divider">—<br/>OR<br/>—</div>
-
-          <!-- Bank details removed as per request -->
           <div class="signature">
             <p>For : ARISE ACADEMY PRIVATE LIMITED</p>
             <div class="sig-line">

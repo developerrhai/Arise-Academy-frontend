@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -69,14 +69,14 @@ export function TeachersContent() {
   }
 
   const [addOpen, setAddOpen] = useState(false)
-  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", institute: "", location: "" })
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", institute: "", location: "", password: "" })
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       await teachersApi.create({ ...addForm, subjects: [] })
       setAddOpen(false)
-      setAddForm({ name: "", email: "", phone: "", institute: "", location: "" })
+      setAddForm({ name: "", email: "", phone: "", institute: "", location: "", password: "" })
       const res: any = await teachersApi.getAll()
       setTeachers(res.data)
     } catch (err: any) { alert(err.message) }
@@ -335,6 +335,7 @@ export function TeachersContent() {
             <div className="space-y-2"><Label>Phone</Label><Input value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} /></div>
             <div className="space-y-2"><Label>Institute</Label><Input value={addForm.institute} onChange={e => setAddForm({...addForm, institute: e.target.value})} /></div>
             <div className="space-y-2"><Label>Location</Label><Input value={addForm.location} onChange={e => setAddForm({...addForm, location: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Password</Label><Input type="password" value={addForm.password} onChange={e => setAddForm({...addForm, password: e.target.value})} placeholder="Set initial password" /></div>
             <Button type="submit" className="w-full">Save Teacher</Button>
           </form>
         </DialogContent>
