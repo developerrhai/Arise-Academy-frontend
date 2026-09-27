@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { getToken } from "@/lib/api";
+import { formatTime } from "@/lib/utils";
 
 interface AttendanceRecord {
   student: {
@@ -225,8 +226,8 @@ export function AttendanceContent() {
   const openEditModal = (record: AttendanceRecord) => {
     setEditingRecord(record);
     setEditStatus(record.status);
-    setEditPunchIn(record.punchIn || "");
-    setEditPunchOut(record.punchOut || "");
+    setEditPunchIn(formatTime(record.punchIn || ""));
+    setEditPunchOut(formatTime(record.punchOut || ""));
     setEditBioCode(record.student.code || "");
     setIsEditOpen(true);
   };
@@ -323,8 +324,8 @@ export function AttendanceContent() {
       "Class/Standard": r.student.standard || "N/A",
       "Branch": r.student.branch || "N/A",
       "Date": r.date,
-      "Punch In": r.punchIn || "—",
-      "Punch Out": r.punchOut || "—",
+      "Punch In": formatTime(r.punchIn || "") || "—",
+      "Punch Out": formatTime(r.punchOut || "") || "—",
       "Status": r.status,
       "Source": r.source
     }));
@@ -888,7 +889,7 @@ export function AttendanceContent() {
                     type="text"
                     placeholder="e.g. 08:30"
                     value={editPunchIn}
-                    onChange={(e) => setEditPunchIn(e.target.value)}
+                    onChange={(e) => setEditPunchIn(formatTime(e.target.value))}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -898,7 +899,7 @@ export function AttendanceContent() {
                     type="text"
                     placeholder="e.g. 17:00"
                     value={editPunchOut}
-                    onChange={(e) => setEditPunchOut(e.target.value)}
+                    onChange={(e) => setEditPunchOut(formatTime(e.target.value))}
                   />
                 </div>
               </div>
