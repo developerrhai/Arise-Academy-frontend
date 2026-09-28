@@ -355,7 +355,7 @@ export function AttendanceContent() {
       report.forEach((user: any) => {
         Object.keys(user.attendance || {}).forEach(d => allDates.add(d));
       });
-      const sortedDates = Array.from(allDates).sort();
+      const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
       
       const calculateDuration = (inTime: string, outTime: string) => {
         if (!inTime || !outTime) return "—";
@@ -380,6 +380,7 @@ export function AttendanceContent() {
           "Branch": user.branch || "N/A",
         };
         if (role === "STUDENT") {
+          row["Course"] = user.course || "N/A";
           row["Standard"] = user.standard || "N/A";
         }
         
@@ -484,7 +485,7 @@ export function AttendanceContent() {
       report.forEach((user: any) => {
         Object.keys(user.attendance || {}).forEach(d => allDates.add(d));
       });
-      const sortedDates = Array.from(allDates).sort();
+      const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
       
       const calculateDuration = (inTime: string, outTime: string) => {
         if (!inTime || !outTime) return "—";
@@ -509,6 +510,7 @@ export function AttendanceContent() {
           "Branch": user.branch || "N/A",
         };
         if (customRole === "STUDENT") {
+          row["Course"] = user.course || "N/A";
           row["Standard"] = user.standard || "N/A";
         }
         
