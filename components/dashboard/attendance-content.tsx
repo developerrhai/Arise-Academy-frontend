@@ -387,7 +387,21 @@ export function AttendanceContent() {
         let totalMonthlyMins = 0;
         
         sortedDates.forEach(d => {
-          const dayNum = parseInt(d.split('-')[2], 10);
+          const dateObj = new Date(d);
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          // Try parsing from YYYY-MM-DD if JS Date is invalid, else use Date object
+          let dayStr = "";
+          if (isNaN(dateObj.getTime())) {
+             const parts = d.split('-');
+             if (parts.length >= 3) {
+                 dayStr = parseInt(parts[2], 10).toString();
+             } else {
+                 dayStr = "N/A";
+             }
+          } else {
+             dayStr = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+          }
+          
           const att = user.attendance[d] || {};
           const status = att.status || "—";
           
@@ -405,10 +419,10 @@ export function AttendanceContent() {
             totalMonthlyMins += diffMins;
           }
 
-          row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
-          row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
-          row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
-          row[`${dayNum} Status`] = status;
+          row[`${dayStr} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
+          row[`${dayStr} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
+          row[`${dayStr} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
+          row[`${dayStr} Status`] = status;
         });
         
         const totalWorkingDays = sortedDates.length;
@@ -502,7 +516,21 @@ export function AttendanceContent() {
         let totalMonthlyMins = 0;
         
         sortedDates.forEach(d => {
-          const dayNum = parseInt(d.split('-')[2], 10);
+          const dateObj = new Date(d);
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          // Try parsing from YYYY-MM-DD if JS Date is invalid, else use Date object
+          let dayStr = "";
+          if (isNaN(dateObj.getTime())) {
+             const parts = d.split('-');
+             if (parts.length >= 3) {
+                 dayStr = parseInt(parts[2], 10).toString();
+             } else {
+                 dayStr = "N/A";
+             }
+          } else {
+             dayStr = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+          }
+          
           const att = user.attendance[d] || {};
           const status = att.status || "—";
           
@@ -520,10 +548,10 @@ export function AttendanceContent() {
             totalMonthlyMins += diffMins;
           }
 
-          row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
-          row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
-          row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
-          row[`${dayNum} Status`] = status;
+          row[`${dayStr} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
+          row[`${dayStr} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
+          row[`${dayStr} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
+          row[`${dayStr} Status`] = status;
         });
         
         const totalWorkingDays = sortedDates.length;
