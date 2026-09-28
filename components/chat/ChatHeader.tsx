@@ -61,14 +61,14 @@ export function ChatHeader() {
         <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center shrink-0">
           <Users className="h-5 w-5 text-muted-foreground" />
         </div>
-        <div>
-          <h3 className="font-semibold text-foreground tracking-tight leading-none">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-foreground tracking-tight leading-none truncate">
             {group.name}
           </h3>
-          <span className="text-xs text-muted-foreground mt-1">
+          <span className="text-xs text-muted-foreground mt-1 truncate block">
             {group.description || "Group Chat"}
             {(group as any).member_count != null && (
-              <span className="ml-2">• {(group as any).member_count} members</span>
+              <span className="ml-2 whitespace-nowrap">• {(group as any).member_count} members</span>
             )}
           </span>
         </div>

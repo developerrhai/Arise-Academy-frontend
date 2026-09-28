@@ -16,7 +16,7 @@ export function ChatGroupList() {
   };
 
   return (
-    <div className="w-72 border-r border-border/70 flex flex-col bg-background/50">
+    <div className="w-72 shrink-0 border-r border-border/70 flex flex-col bg-background/50 overflow-hidden">
       <div className="p-4 border-b border-border/70">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
@@ -36,14 +36,14 @@ export function ChatGroupList() {
                 key={group.id}
                 onClick={() => handleGroupSelect(group.id)}
                 className={cn(
-                  "w-full flex flex-col items-start gap-1 p-3 rounded-lg text-left transition-colors",
+                  "w-full flex flex-col items-start gap-1 p-3 rounded-lg text-left transition-colors min-w-0 overflow-hidden",
                   activeGroupId === group.id
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "hover:bg-accent/50 text-foreground"
                 )}
               >
-                <div className="font-medium flex items-center justify-between w-full">
-                  <span className="truncate">{group.name}</span>
+                <div className="font-medium flex items-center justify-between w-full min-w-0 gap-2">
+                  <span className="truncate flex-1">{group.name}</span>
                   <Users className="h-3.5 w-3.5 opacity-70 shrink-0" />
                 </div>
                 <div className={cn(
