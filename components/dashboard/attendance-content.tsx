@@ -374,15 +374,17 @@ export function AttendanceContent() {
 
       const rows = report.map((user: any) => {
         const row: any = {
+          "Code": user.code || "N/A",
           "Name": user.name,
-          "Contact": user.contact,
-          "Code": user.code,
+          "Contact": user.contact || "N/A",
+          "Branch": user.branch || "N/A",
         };
         if (role === "STUDENT") {
-          row["Standard"] = user.standard;
+          row["Standard"] = user.standard || "N/A";
         }
         
         let present = 0, absent = 0, late = 0, onLeave = 0;
+        let totalMonthlyMins = 0;
         
         sortedDates.forEach(d => {
           const dayNum = parseInt(d.split('-')[2], 10);
@@ -394,16 +396,36 @@ export function AttendanceContent() {
           else if (status === "Late") late++;
           else if (status === "On Leave") onLeave++;
 
+          let diffMins = 0;
+          if (att.punch_in_time && att.punch_out_time) {
+            const [inH, inM] = att.punch_in_time.split(':').map(Number);
+            const [outH, outM] = att.punch_out_time.split(':').map(Number);
+            diffMins = (outH * 60 + outM) - (inH * 60 + inM);
+            if (diffMins < 0) diffMins += 24 * 60;
+            totalMonthlyMins += diffMins;
+          }
+
           row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
           row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
           row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
           row[`${dayNum} Status`] = status;
         });
         
+        const totalWorkingDays = sortedDates.length;
+        const attendancePercentage = totalWorkingDays > 0 
+          ? (((present + late) / totalWorkingDays) * 100).toFixed(1) + "%" 
+          : "0%";
+
+        const totalHours = Math.floor(totalMonthlyMins / 60);
+        const totalMins = totalMonthlyMins % 60;
+
         row["Total Present"] = present;
         row["Total Absent"] = absent;
         row["Total Late"] = late;
         row["Total Leave"] = onLeave;
+        row["Working Days"] = totalWorkingDays;
+        row["Attendance %"] = attendancePercentage;
+        row["Monthly Hours"] = `${totalHours}h ${totalMins}m`;
         
         return row;
       });
@@ -467,15 +489,17 @@ export function AttendanceContent() {
 
       const rows = report.map((user: any) => {
         const row: any = {
+          "Code": user.code || "N/A",
           "Name": user.name,
-          "Contact": user.contact,
-          "Code": user.code,
+          "Contact": user.contact || "N/A",
+          "Branch": user.branch || "N/A",
         };
         if (customRole === "STUDENT") {
-          row["Standard"] = user.standard;
+          row["Standard"] = user.standard || "N/A";
         }
         
         let present = 0, absent = 0, late = 0, onLeave = 0;
+        let totalMonthlyMins = 0;
         
         sortedDates.forEach(d => {
           const dayNum = parseInt(d.split('-')[2], 10);
@@ -487,16 +511,36 @@ export function AttendanceContent() {
           else if (status === "Late") late++;
           else if (status === "On Leave") onLeave++;
 
+          let diffMins = 0;
+          if (att.punch_in_time && att.punch_out_time) {
+            const [inH, inM] = att.punch_in_time.split(':').map(Number);
+            const [outH, outM] = att.punch_out_time.split(':').map(Number);
+            diffMins = (outH * 60 + outM) - (inH * 60 + inM);
+            if (diffMins < 0) diffMins += 24 * 60;
+            totalMonthlyMins += diffMins;
+          }
+
           row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
           row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
           row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
           row[`${dayNum} Status`] = status;
         });
         
+        const totalWorkingDays = sortedDates.length;
+        const attendancePercentage = totalWorkingDays > 0 
+          ? (((present + late) / totalWorkingDays) * 100).toFixed(1) + "%" 
+          : "0%";
+
+        const totalHours = Math.floor(totalMonthlyMins / 60);
+        const totalMins = totalMonthlyMins % 60;
+
         row["Total Present"] = present;
         row["Total Absent"] = absent;
         row["Total Late"] = late;
         row["Total Leave"] = onLeave;
+        row["Working Days"] = totalWorkingDays;
+        row["Attendance %"] = attendancePercentage;
+        row["Total Range Hours"] = `${totalHours}h ${totalMins}m`;
         
         return row;
       });
