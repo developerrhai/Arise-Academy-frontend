@@ -357,6 +357,21 @@ export function AttendanceContent() {
       });
       const sortedDates = Array.from(allDates).sort();
       
+      const calculateDuration = (inTime: string, outTime: string) => {
+        if (!inTime || !outTime) return "—";
+        try {
+          const [inH, inM] = inTime.split(':').map(Number);
+          const [outH, outM] = outTime.split(':').map(Number);
+          let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
+          if (diffMins < 0) diffMins += 24 * 60;
+          const hours = Math.floor(diffMins / 60);
+          const mins = diffMins % 60;
+          return `${hours}h ${mins}m`;
+        } catch {
+          return "—";
+        }
+      };
+
       const rows = report.map((user: any) => {
         const row: any = {
           "Name": user.name,
@@ -370,12 +385,19 @@ export function AttendanceContent() {
         let present = 0, absent = 0, late = 0, onLeave = 0;
         
         sortedDates.forEach(d => {
-          const status = user.attendance[d]?.status || "—";
-          row[d] = status;
+          const dayNum = parseInt(d.split('-')[2], 10);
+          const att = user.attendance[d] || {};
+          const status = att.status || "—";
+          
           if (status === "Present") present++;
           else if (status === "Absent") absent++;
           else if (status === "Late") late++;
           else if (status === "On Leave") onLeave++;
+
+          row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
+          row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
+          row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
+          row[`${dayNum} Status`] = status;
         });
         
         row["Total Present"] = present;
@@ -428,6 +450,21 @@ export function AttendanceContent() {
       });
       const sortedDates = Array.from(allDates).sort();
       
+      const calculateDuration = (inTime: string, outTime: string) => {
+        if (!inTime || !outTime) return "—";
+        try {
+          const [inH, inM] = inTime.split(':').map(Number);
+          const [outH, outM] = outTime.split(':').map(Number);
+          let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
+          if (diffMins < 0) diffMins += 24 * 60;
+          const hours = Math.floor(diffMins / 60);
+          const mins = diffMins % 60;
+          return `${hours}h ${mins}m`;
+        } catch {
+          return "—";
+        }
+      };
+
       const rows = report.map((user: any) => {
         const row: any = {
           "Name": user.name,
@@ -441,12 +478,19 @@ export function AttendanceContent() {
         let present = 0, absent = 0, late = 0, onLeave = 0;
         
         sortedDates.forEach(d => {
-          const status = user.attendance[d]?.status || "—";
-          row[d] = status;
+          const dayNum = parseInt(d.split('-')[2], 10);
+          const att = user.attendance[d] || {};
+          const status = att.status || "—";
+          
           if (status === "Present") present++;
           else if (status === "Absent") absent++;
           else if (status === "Late") late++;
           else if (status === "On Leave") onLeave++;
+
+          row[`${dayNum} In`] = att.punch_in_time ? att.punch_in_time.substring(0,5) : "—";
+          row[`${dayNum} Out`] = att.punch_out_time ? att.punch_out_time.substring(0,5) : "—";
+          row[`${dayNum} Total`] = calculateDuration(att.punch_in_time, att.punch_out_time);
+          row[`${dayNum} Status`] = status;
         });
         
         row["Total Present"] = present;
