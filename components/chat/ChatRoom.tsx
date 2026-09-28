@@ -49,9 +49,9 @@ export function ChatRoom() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-background/50">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-background/50">
       <ChatHeader />
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative min-h-0">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

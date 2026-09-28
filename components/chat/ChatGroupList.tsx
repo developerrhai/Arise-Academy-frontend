@@ -24,7 +24,7 @@ export function ChatGroupList() {
         </h2>
       </div>
       
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-2 space-y-1">
           {groups.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground text-center">
